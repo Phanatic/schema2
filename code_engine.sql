@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.5.44-log)
 # Database: codeengine
-# Generation Time: 2016-03-04 19:24:28 +0000
+# Generation Time: 2016-03-04 19:46:29 +0000
 # ************************************************************
 
 
@@ -236,6 +236,16 @@ CREATE TABLE `environment` (
   CONSTRAINT `environment_type_id_fk` FOREIGN KEY (`environment_type_id`) REFERENCES `environment_type` (`environment_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+LOCK TABLES `environment` WRITE;
+/*!40000 ALTER TABLE `environment` DISABLE KEYS */;
+
+INSERT INTO `environment` (`environment_id`, `environment_type_id`, `label`, `description`)
+VALUES
+	(1,1,'Neil\'s CloudFoundry env','wubble wubble'),
+	(4,2,'Adam\'s AWS env','Harold the hedgehog');
+
+/*!40000 ALTER TABLE `environment` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Dump of table environment_type
@@ -362,6 +372,15 @@ CREATE TABLE `project` (
   CONSTRAINT `project_runtime_type_id_fk` FOREIGN KEY (`runtime_type_id`) REFERENCES `runtime_type` (`runtime_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a CodeEngine project.';
 
+LOCK TABLES `project` WRITE;
+/*!40000 ALTER TABLE `project` DISABLE KEYS */;
+
+INSERT INTO `project` (`project_id`, `project_name`, `description`, `created`, `repo_id`, `runtime_type_id`)
+VALUES
+	(1,'neil-schema-2','It\'s a new project!','2016-03-04 12:44:57',1,5);
+
+/*!40000 ALTER TABLE `project` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Dump of table project_environment
@@ -378,6 +397,15 @@ CREATE TABLE `project_environment` (
   CONSTRAINT `project_id_fk` FOREIGN KEY (`project_id`) REFERENCES `project` (`project_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Map of projects to deployment environments/targets.';
 
+LOCK TABLES `project_environment` WRITE;
+/*!40000 ALTER TABLE `project_environment` DISABLE KEYS */;
+
+INSERT INTO `project_environment` (`project_id`, `environment_id`)
+VALUES
+	(1,4);
+
+/*!40000 ALTER TABLE `project_environment` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Dump of table project_member
@@ -395,6 +423,17 @@ CREATE TABLE `project_member` (
   CONSTRAINT `project_member_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Map of user project membership.';
 
+LOCK TABLES `project_member` WRITE;
+/*!40000 ALTER TABLE `project_member` DISABLE KEYS */;
+
+INSERT INTO `project_member` (`project_id`, `user_id`, `is_owner`)
+VALUES
+	(1,1,1),
+	(1,2,0),
+	(1,3,1);
+
+/*!40000 ALTER TABLE `project_member` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Dump of table repo
@@ -412,6 +451,15 @@ CREATE TABLE `repo` (
   CONSTRAINT `repo_vcs_id_fk` FOREIGN KEY (`vcs_id`) REFERENCES `vcs` (`vcs_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a generic VCS repo instance. This table is used in conjunction with a specific repo VCS type table, e.g. "repo_github" or "repo_svn".';
 
+LOCK TABLES `repo` WRITE;
+/*!40000 ALTER TABLE `repo` DISABLE KEYS */;
+
+INSERT INTO `repo` (`repo_id`, `repo_name`, `vcs_id`)
+VALUES
+	(1,'neilotoole/schema2',1);
+
+/*!40000 ALTER TABLE `repo` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Dump of table repo_github
@@ -437,6 +485,15 @@ CREATE TABLE `repo_github` (
   CONSTRAINT `repo_github_repo_id_fk` FOREIGN KEY (`repo_id`) REFERENCES `repo` (`repo_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a reference to a GitHub repo. This table is used in conjunction with the generic "repo" table.';
 
+LOCK TABLES `repo_github` WRITE;
+/*!40000 ALTER TABLE `repo_github` DISABLE KEYS */;
+
+INSERT INTO `repo_github` (`repo_id`, `github_repo_id`, `repo_user`, `branch`, `http_url`, `clone_url`, `ssh_url`, `webhook_id`, `webhook_url`, `oauth2_token`, `webhook_token`, `latest_commit_sha`)
+VALUES
+	(1,'234234234','neilotoole','master','https://github.com/neilotoole/schema2','https://github.com/neilotoole/schema2.git',NULL,'23234234','https://something','234234234','234234234','234234234');
+
+/*!40000 ALTER TABLE `repo_github` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Dump of table repo_svn
@@ -518,6 +575,17 @@ CREATE TABLE `user` (
   UNIQUE KEY `user_id_uindex` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+LOCK TABLES `user` WRITE;
+/*!40000 ALTER TABLE `user` DISABLE KEYS */;
+
+INSERT INTO `user` (`user_id`, `email`, `full_name`, `created`)
+VALUES
+	(1,'neilotoole@apache.org','Neil O\'Toole','2016-03-04 12:38:35'),
+	(2,'phani.raj@hpe.com','Phani Raj','2016-03-04 12:38:48'),
+	(3,'adam.sheldon@hpe.com','Adam Sheldon','2016-03-04 12:39:00');
+
+/*!40000 ALTER TABLE `user` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Dump of table variable
@@ -564,6 +632,16 @@ CREATE TABLE `vcs` (
   CONSTRAINT `vcs_type_id_fk` FOREIGN KEY (`vcs_type_id`) REFERENCES `vcs_type` (`vcs_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of VCS instances. For example, "GitHub.com", "Bitbucket.org", "HPE IT GitHub Enterprise", "HPE Software GitHub Enterprise", etc.';
 
+LOCK TABLES `vcs` WRITE;
+/*!40000 ALTER TABLE `vcs` DISABLE KEYS */;
+
+INSERT INTO `vcs` (`vcs_id`, `browse_url`, `api_url`, `label`, `vcs_type_id`)
+VALUES
+	(1,'https://github.com','https://api.github.com','GitHub',1),
+	(2,'https://github-enterprise.us-west.hpe.com','https://api.github-enterprise.us-west.hpe.com','HPE GitHub Enterprise',2);
+
+/*!40000 ALTER TABLE `vcs` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Dump of table vcs_type
