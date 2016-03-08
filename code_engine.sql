@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.5.44-log)
 # Database: codeengine
-# Generation Time: 2016-03-04 19:46:29 +0000
+# Generation Time: 2016-03-08 16:02:11 +0000
 # ************************************************************
 
 
@@ -99,47 +99,19 @@ CREATE TABLE `build` (
   `build_id` int(11) NOT NULL AUTO_INCREMENT,
   `project_id` int(11) NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `build_reason_type_id` int(11) NOT NULL,
-  `build_reason_message` longtext,
   `result_message` longtext,
   `result_type_id` int(11) NOT NULL,
+  `build_trigger_id` int(11) NOT NULL,
   PRIMARY KEY (`build_id`),
   UNIQUE KEY `build_id_uindex` (`build_id`),
   KEY `build_project_id_fk` (`project_id`),
-  KEY `build_reason_type_id_fk` (`build_reason_type_id`),
   KEY `build_result_type_id_fk` (`result_type_id`),
+  KEY `build_build_trigger_build_trigger_id_fk` (`build_trigger_id`),
+  CONSTRAINT `build_build_trigger_build_trigger_id_fk` FOREIGN KEY (`build_trigger_id`) REFERENCES `build_trigger` (`build_trigger_id`),
   CONSTRAINT `build_project_id_fk` FOREIGN KEY (`project_id`) REFERENCES `project` (`project_id`),
-  CONSTRAINT `build_reason_type_id_fk` FOREIGN KEY (`build_reason_type_id`) REFERENCES `build_reason_type` (`build_reason_type_id`),
   CONSTRAINT `build_result_type_id_fk` FOREIGN KEY (`result_type_id`) REFERENCES `result_type` (`result_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
-
-# Dump of table build_reason_type
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `build_reason_type`;
-
-CREATE TABLE `build_reason_type` (
-  `build_reason_type_id` int(11) NOT NULL AUTO_INCREMENT,
-  `build_reason_type` varchar(64) NOT NULL,
-  `build_reason_type_label` varchar(255) NOT NULL,
-  PRIMARY KEY (`build_reason_type_id`),
-  UNIQUE KEY `build_reason_type_id_uindex` (`build_reason_type_id`),
-  UNIQUE KEY `build_reason_type_label_uindex` (`build_reason_type_label`),
-  UNIQUE KEY `build_reason_type_uindex` (`build_reason_type`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-LOCK TABLES `build_reason_type` WRITE;
-/*!40000 ALTER TABLE `build_reason_type` DISABLE KEYS */;
-
-INSERT INTO `build_reason_type` (`build_reason_type_id`, `build_reason_type`, `build_reason_type_label`)
-VALUES
-	(1,'MANUAL','Manual'),
-	(2,'PULL_REQUEST','Pull request');
-
-/*!40000 ALTER TABLE `build_reason_type` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Dump of table build_step
@@ -162,9 +134,9 @@ CREATE TABLE `build_step` (
   KEY `build_step_artifact_id_fk` (`artifact_id`),
   KEY `build_step_type_id_fk` (`build_step_type_id`),
   KEY `build_step_result_type_id_fk` (`result_type_id`),
-  CONSTRAINT `build_step_result_type_id_fk` FOREIGN KEY (`result_type_id`) REFERENCES `result_type` (`result_type_id`),
   CONSTRAINT `build_step_artifact_id_fk` FOREIGN KEY (`artifact_id`) REFERENCES `artifact` (`artifact_id`),
   CONSTRAINT `build_step_build_id_fk` FOREIGN KEY (`build_id`) REFERENCES `build` (`build_id`),
+  CONSTRAINT `build_step_result_type_id_fk` FOREIGN KEY (`result_type_id`) REFERENCES `result_type` (`result_type_id`),
   CONSTRAINT `build_step_type_id_fk` FOREIGN KEY (`build_step_type_id`) REFERENCES `build_step_type` (`build_step_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -195,6 +167,163 @@ VALUES
 	(3,'DEPLOYING','Deploying');
 
 /*!40000 ALTER TABLE `build_step_type` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
+# Dump of table build_trigger
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `build_trigger`;
+
+CREATE TABLE `build_trigger` (
+  `build_trigger_id` int(11) NOT NULL AUTO_INCREMENT,
+  `build_trigger_type_id` int(11) NOT NULL,
+  `trigger_message` longtext,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `trigger_author` varchar(255) NOT NULL,
+  `trigger_author_avatar_url` varchar(512) DEFAULT NULL,
+  PRIMARY KEY (`build_trigger_id`),
+  UNIQUE KEY `build_trigger_id_uindex` (`build_trigger_id`),
+  KEY `build_trigger_type_id_fk` (`build_trigger_type_id`),
+  CONSTRAINT `build_trigger_type_id_fk` FOREIGN KEY (`build_trigger_type_id`) REFERENCES `build_trigger_type` (`build_trigger_type_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a build trigger event.';
+
+
+
+# Dump of table build_trigger_manual_git
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `build_trigger_manual_git`;
+
+CREATE TABLE `build_trigger_manual_git` (
+  `build_trigger_id` int(11) NOT NULL,
+  `commit_sha` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`build_trigger_id`),
+  UNIQUE KEY `build_trigger_id_uindex` (`build_trigger_id`),
+  CONSTRAINT `build_trigger_manual_git_build_id_fk` FOREIGN KEY (`build_trigger_id`) REFERENCES `build_trigger` (`build_trigger_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a manual trigger of a Git-repo build.';
+
+
+
+# Dump of table build_trigger_manual_svn
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `build_trigger_manual_svn`;
+
+CREATE TABLE `build_trigger_manual_svn` (
+  `build_trigger_id` int(11) NOT NULL,
+  `branch` int(11) NOT NULL,
+  PRIMARY KEY (`build_trigger_id`),
+  UNIQUE KEY `build_trigger_manual_svn_build_trigger_id_uindex` (`build_trigger_id`),
+  CONSTRAINT `build_trigger_manual_svn_build_trigger_id_fk` FOREIGN KEY (`build_trigger_id`) REFERENCES `build_trigger` (`build_trigger_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a manual trigger of a build of a SVN repo.';
+
+
+
+# Dump of table build_trigger_pull_request
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `build_trigger_pull_request`;
+
+CREATE TABLE `build_trigger_pull_request` (
+  `build_trigger_id` int(11) NOT NULL AUTO_INCREMENT,
+  `commit_sha` varchar(255) NOT NULL,
+  `commit_url` varchar(255) DEFAULT NULL,
+  `compare_url` varchar(255) DEFAULT NULL,
+  `pull_request_id` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`build_trigger_id`),
+  UNIQUE KEY `build_trigger_id_uindex` (`build_trigger_id`),
+  CONSTRAINT `build_trigger_pull_request_id_fk` FOREIGN KEY (`build_trigger_id`) REFERENCES `build_trigger` (`build_trigger_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a PULL_REQUEST build trigger event.';
+
+
+
+# Dump of table build_trigger_type
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `build_trigger_type`;
+
+CREATE TABLE `build_trigger_type` (
+  `build_trigger_type_id` int(11) NOT NULL AUTO_INCREMENT,
+  `build_trigger_type` varchar(255) NOT NULL,
+  `build_trigger_type_label` varchar(255) NOT NULL,
+  PRIMARY KEY (`build_trigger_type_id`),
+  UNIQUE KEY `build_trigger_type_id_uindex` (`build_trigger_type_id`),
+  UNIQUE KEY `build_trigger_type_uindex` (`build_trigger_type`),
+  UNIQUE KEY `build_trigger_type_label_uindex` (`build_trigger_type_label`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Enumeration of build trigger types, e.g. "MANUAL" or "PULL_REQUEST"';
+
+LOCK TABLES `build_trigger_type` WRITE;
+/*!40000 ALTER TABLE `build_trigger_type` DISABLE KEYS */;
+
+INSERT INTO `build_trigger_type` (`build_trigger_type_id`, `build_trigger_type`, `build_trigger_type_label`)
+VALUES
+	(1,'PULL_REQUEST','Pull Request'),
+	(2,'MANUAL_GIT','Manual trigger (Git)'),
+	(3,'MANUAL_SVN','Manual trigger (SVN)');
+
+/*!40000 ALTER TABLE `build_trigger_type` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
+# Dump of table credential
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `credential`;
+
+CREATE TABLE `credential` (
+  `credential_id` int(11) NOT NULL AUTO_INCREMENT,
+  `credential_type_id` int(11) NOT NULL,
+  `credential_key` varchar(512) DEFAULT NULL,
+  `credential_value` longtext,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `label` varchar(512) DEFAULT NULL,
+  PRIMARY KEY (`credential_id`),
+  UNIQUE KEY `credential_id_uindex` (`credential_id`),
+  KEY `credential_credential_type_credential_type_id_fk` (`credential_type_id`),
+  CONSTRAINT `credential_credential_type_credential_type_id_fk` FOREIGN KEY (`credential_type_id`) REFERENCES `credential_type` (`credential_type_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models an access credential instance.';
+
+LOCK TABLES `credential` WRITE;
+/*!40000 ALTER TABLE `credential` DISABLE KEYS */;
+
+INSERT INTO `credential` (`credential_id`, `credential_type_id`, `credential_key`, `credential_value`, `created`, `label`)
+VALUES
+	(1,1,'myusername','mypassword','2016-03-08 05:47:56','Neil\'s CF username/password'),
+	(2,3,'AKIAIOSFODNN7EXAMPLE','wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY','2016-03-08 05:49:20','Neil\'s AWS access key pair'),
+	(3,4,'github_rsa','ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDu3dTyj/jAXkvAwyNBwlc9tX/kZZ9w+oAfzggB7ZzER3AKC7NVMgwh1LRJ5QvQVQeQNwcVNjVidlrHd8BCcGto6+UowJWTmEqb23Ky+OxXiqSM7qCxc0Fs8cOBcN7IbZ6eNfqKrUA5JKR1vRL3KZH6ustedD14XDT2/mRMvOq7gcyQvQxaZitBEKILvasdfasdfnkWORUE6j8UzIvNZrRyUhZ6ti+do+lFwapYbZ4RpJsDGBGJEuQ13XuKKx0p1Zw1vLcLqN6wv4+1Gpi3/CABTypuFMOVfMCgkLlm4ujel0QCsa2NsMutNjBNNsAD7oCRzNDJF5EaBwjcLn9hPcYVYh bubba@github.com\n','2016-03-08 05:51:09','Neil\'s GitHub key'),
+	(4,2,NULL,'6e0a8cb3e4dc64f72b2a0f0a0191de4cc242dca6','2016-03-08 05:53:32','Neil\'s OAuth2 token');
+
+/*!40000 ALTER TABLE `credential` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
+# Dump of table credential_type
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `credential_type`;
+
+CREATE TABLE `credential_type` (
+  `credential_type_id` int(11) NOT NULL AUTO_INCREMENT,
+  `credential_type` varchar(255) NOT NULL,
+  `credential_type_label` varchar(255) NOT NULL,
+  PRIMARY KEY (`credential_type_id`),
+  UNIQUE KEY `credential_type_id_uindex` (`credential_type_id`),
+  UNIQUE KEY `credential_type_uindex` (`credential_type`),
+  UNIQUE KEY `credential_type_label_uindex` (`credential_type_label`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Enumeration of credential types, e.g. "OAUTH2", "USERNAME_PASSWORD", etc.';
+
+LOCK TABLES `credential_type` WRITE;
+/*!40000 ALTER TABLE `credential_type` DISABLE KEYS */;
+
+INSERT INTO `credential_type` (`credential_type_id`, `credential_type`, `credential_type_label`)
+VALUES
+	(1,'USERNAME_PASSWORD','Username & Password'),
+	(2,'OAUTH2_TOKEN','OAuth2 Token'),
+	(3,'AWS_ACCESS_KEY','AWS Access Key'),
+	(4,'PKI','Public/Private Key');
+
+/*!40000 ALTER TABLE `credential_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
 
@@ -229,23 +358,61 @@ CREATE TABLE `environment` (
   `environment_type_id` int(11) NOT NULL,
   `label` varchar(255) NOT NULL,
   `description` longtext,
+  `url` varchar(512) NOT NULL,
+  `owner_user_id` int(11) NOT NULL,
+  `environment_credential_id` int(11) NOT NULL,
   PRIMARY KEY (`environment_id`),
   UNIQUE KEY `environment_environment_id_uindex` (`environment_id`),
   UNIQUE KEY `environment_label_uindex` (`label`),
   KEY `environment_type_id_fk` (`environment_type_id`),
+  KEY `environment_owner_user_id_fk` (`owner_user_id`),
+  KEY `environment_credential_id_fk` (`environment_credential_id`),
+  CONSTRAINT `environment_credential_id_fk` FOREIGN KEY (`environment_credential_id`) REFERENCES `credential` (`credential_id`),
+  CONSTRAINT `environment_owner_user_id_fk` FOREIGN KEY (`owner_user_id`) REFERENCES `user` (`user_id`),
   CONSTRAINT `environment_type_id_fk` FOREIGN KEY (`environment_type_id`) REFERENCES `environment_type` (`environment_type_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a deployment target/environment instance, such as a CloudFoundry instance or an AWS instance.';
 
 LOCK TABLES `environment` WRITE;
 /*!40000 ALTER TABLE `environment` DISABLE KEYS */;
 
-INSERT INTO `environment` (`environment_id`, `environment_type_id`, `label`, `description`)
+INSERT INTO `environment` (`environment_id`, `environment_type_id`, `label`, `description`, `url`, `owner_user_id`, `environment_credential_id`)
 VALUES
-	(1,1,'Neil\'s CloudFoundry env','wubble wubble'),
-	(4,2,'Adam\'s AWS env','Harold the hedgehog');
+	(1,1,'Neil\'s CloudFoundry env','wubble wubble','https://cloudfoundry1.example.com',1,1),
+	(4,2,'Adam\'s AWS env','Harold the hedgehog','https://aws1.example.com',1,1);
 
 /*!40000 ALTER TABLE `environment` ENABLE KEYS */;
 UNLOCK TABLES;
+
+
+# Dump of table environment_aws
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `environment_aws`;
+
+CREATE TABLE `environment_aws` (
+  `environment_id` int(11) NOT NULL,
+  `aws_environment_name` varchar(255) NOT NULL,
+  PRIMARY KEY (`environment_id`),
+  UNIQUE KEY `environment_aws_environment_id_uindex` (`environment_id`),
+  CONSTRAINT `aws_environment_id_fk` FOREIGN KEY (`environment_id`) REFERENCES `environment` (`environment_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models an AWS deployment target/environment instance.';
+
+
+
+# Dump of table environment_cloudfoundry
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `environment_cloudfoundry`;
+
+CREATE TABLE `environment_cloudfoundry` (
+  `environment_id` int(11) NOT NULL,
+  `organization` varchar(255) NOT NULL,
+  `space` varchar(255) NOT NULL,
+  PRIMARY KEY (`environment_id`),
+  UNIQUE KEY `environment_cloudfoundry_id_uindex` (`environment_id`),
+  CONSTRAINT `cloudfoundry_environment_id_fk` FOREIGN KEY (`environment_id`) REFERENCES `environment` (`environment_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a CloudFoundry deployment target/environment instance.';
+
 
 
 # Dump of table environment_type
@@ -285,12 +452,14 @@ CREATE TABLE `notification_target` (
   `notification_type_id` int(11) NOT NULL,
   `project_id` int(11) NOT NULL,
   `url` varchar(255) NOT NULL,
-  `token` varchar(255) NOT NULL,
-  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `label` varchar(255) DEFAULT NULL,
+  `target_credential_id` int(11) NOT NULL,
   PRIMARY KEY (`notification_target_id`),
   UNIQUE KEY `notification_target_id_uindex` (`notification_target_id`),
   KEY `notification_target_type_id_fk` (`notification_type_id`),
   KEY `notification_target_project_id_fk` (`project_id`),
+  KEY `notification_target_credential_id_fk` (`target_credential_id`),
+  CONSTRAINT `notification_target_credential_id_fk` FOREIGN KEY (`target_credential_id`) REFERENCES `credential` (`credential_id`),
   CONSTRAINT `notification_target_project_id_fk` FOREIGN KEY (`project_id`) REFERENCES `project` (`project_id`),
   CONSTRAINT `notification_target_type_id_fk` FOREIGN KEY (`notification_type_id`) REFERENCES `notification_type` (`notification_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a notification target instance, e.g. a HipChat room, or GitHub pull request.';
@@ -312,6 +481,19 @@ CREATE TABLE `notification_type` (
   UNIQUE KEY `notification_type_label_uindex` (`notification_type_label`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Enumeration of notification target types, e.g. "SLACK", "HIPCHAT", "GITHUB_PULL_REQUEST", etc.';
 
+LOCK TABLES `notification_type` WRITE;
+/*!40000 ALTER TABLE `notification_type` DISABLE KEYS */;
+
+INSERT INTO `notification_type` (`notification_type_id`, `notification_type`, `notification_type_label`)
+VALUES
+	(1,'SLACK','Slack'),
+	(2,'HIPCHAT','HipChat'),
+	(3,'FLOWDOCK','Flowdock'),
+	(4,'HTTP_POST','HTTP Post'),
+	(5,'GITHUB_PULL_REQUEST','GitHub Pull Request');
+
+/*!40000 ALTER TABLE `notification_type` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Dump of table post_deploy_action
@@ -364,10 +546,13 @@ CREATE TABLE `project` (
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `repo_id` int(11) NOT NULL,
   `runtime_type_id` int(11) NOT NULL,
+  `repo_credential_id` int(11) NOT NULL,
   PRIMARY KEY (`project_id`),
   UNIQUE KEY `project_id_uindex` (`project_id`),
   KEY `project_repo_id_fk` (`repo_id`),
   KEY `project_runtime_type_id_fk` (`runtime_type_id`),
+  KEY `project_repo_credential_id_fk` (`repo_credential_id`),
+  CONSTRAINT `project_repo_credential_id_fk` FOREIGN KEY (`repo_credential_id`) REFERENCES `credential` (`credential_id`),
   CONSTRAINT `project_repo_id_fk` FOREIGN KEY (`repo_id`) REFERENCES `repo` (`repo_id`),
   CONSTRAINT `project_runtime_type_id_fk` FOREIGN KEY (`runtime_type_id`) REFERENCES `runtime_type` (`runtime_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a CodeEngine project.';
@@ -375,9 +560,9 @@ CREATE TABLE `project` (
 LOCK TABLES `project` WRITE;
 /*!40000 ALTER TABLE `project` DISABLE KEYS */;
 
-INSERT INTO `project` (`project_id`, `project_name`, `description`, `created`, `repo_id`, `runtime_type_id`)
+INSERT INTO `project` (`project_id`, `project_name`, `description`, `created`, `repo_id`, `runtime_type_id`, `repo_credential_id`)
 VALUES
-	(1,'neil-schema-2','It\'s a new project!','2016-03-04 12:44:57',1,5);
+	(1,'neil-schema-2','It\'s a new project!','2016-03-08 06:24:26',1,5,4);
 
 /*!40000 ALTER TABLE `project` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -477,20 +662,21 @@ CREATE TABLE `repo_github` (
   `ssh_url` varchar(255) DEFAULT NULL,
   `webhook_id` varchar(255) DEFAULT NULL,
   `webhook_url` varchar(255) DEFAULT NULL,
-  `oauth2_token` varchar(255) DEFAULT NULL,
-  `webhook_token` varchar(255) DEFAULT NULL,
   `latest_commit_sha` varchar(255) DEFAULT NULL,
+  `webhook_credential_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`repo_id`),
   UNIQUE KEY `repo_github_repo_id_uindex` (`repo_id`),
+  KEY `repo_github_webhook_credential_id_fk` (`webhook_credential_id`),
+  CONSTRAINT `repo_github_webhook_credential_id_fk` FOREIGN KEY (`webhook_credential_id`) REFERENCES `credential` (`credential_id`),
   CONSTRAINT `repo_github_repo_id_fk` FOREIGN KEY (`repo_id`) REFERENCES `repo` (`repo_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a reference to a GitHub repo. This table is used in conjunction with the generic "repo" table.';
 
 LOCK TABLES `repo_github` WRITE;
 /*!40000 ALTER TABLE `repo_github` DISABLE KEYS */;
 
-INSERT INTO `repo_github` (`repo_id`, `github_repo_id`, `repo_user`, `branch`, `http_url`, `clone_url`, `ssh_url`, `webhook_id`, `webhook_url`, `oauth2_token`, `webhook_token`, `latest_commit_sha`)
+INSERT INTO `repo_github` (`repo_id`, `github_repo_id`, `repo_user`, `branch`, `http_url`, `clone_url`, `ssh_url`, `webhook_id`, `webhook_url`, `latest_commit_sha`, `webhook_credential_id`)
 VALUES
-	(1,'234234234','neilotoole','master','https://github.com/neilotoole/schema2','https://github.com/neilotoole/schema2.git',NULL,'23234234','https://something','234234234','234234234','234234234');
+	(1,'234234234','neilotoole','master','https://github.com/neilotoole/schema2','https://github.com/neilotoole/schema2.git',NULL,'23234234','https://something','234234234',4);
 
 /*!40000 ALTER TABLE `repo_github` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -504,8 +690,6 @@ DROP TABLE IF EXISTS `repo_svn`;
 CREATE TABLE `repo_svn` (
   `repo_id` int(11) NOT NULL,
   `branch` varchar(255) DEFAULT NULL,
-  `svn_username` varchar(255) NOT NULL,
-  `svn_password` varchar(255) DEFAULT NULL,
   `http_url` varchar(512) DEFAULT NULL,
   UNIQUE KEY `repo_svn_repo_id_uindex` (`repo_id`),
   CONSTRAINT `repo_svn_repo_id_fk` FOREIGN KEY (`repo_id`) REFERENCES `repo` (`repo_id`)
@@ -528,6 +712,17 @@ CREATE TABLE `result_type` (
   UNIQUE KEY `result_type_uindex` (`result_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Enumeration of results: PENDING, SUCCESS, or FAILURE.';
 
+LOCK TABLES `result_type` WRITE;
+/*!40000 ALTER TABLE `result_type` DISABLE KEYS */;
+
+INSERT INTO `result_type` (`result_type_id`, `result_type`, `result_type_label`)
+VALUES
+	(1,'PENDING','Pending'),
+	(2,'SUCCESS','Success'),
+	(3,'FAILURE','Failure');
+
+/*!40000 ALTER TABLE `result_type` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Dump of table runtime_type
@@ -586,6 +781,25 @@ VALUES
 
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
+
+
+# Dump of table user_vcs_credential
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `user_vcs_credential`;
+
+CREATE TABLE `user_vcs_credential` (
+  `user_id` int(11) NOT NULL,
+  `vcs_id` int(11) NOT NULL,
+  `user_vcs_credential_id` int(11) NOT NULL,
+  KEY `user_vcs_credential_user_id_fk` (`user_id`),
+  KEY `user_vcs_credential_vcs_id_fk` (`vcs_id`),
+  KEY `user_vcs_credential_credential_id_fk` (`user_vcs_credential_id`),
+  CONSTRAINT `user_vcs_credential_credential_id_fk` FOREIGN KEY (`user_vcs_credential_id`) REFERENCES `credential` (`credential_id`),
+  CONSTRAINT `user_vcs_credential_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`),
+  CONSTRAINT `user_vcs_credential_vcs_id_fk` FOREIGN KEY (`vcs_id`) REFERENCES `vcs` (`vcs_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Mapping of user credentials for a VCS instance.';
+
 
 
 # Dump of table variable
@@ -664,7 +878,7 @@ LOCK TABLES `vcs_type` WRITE;
 
 INSERT INTO `vcs_type` (`vcs_type_id`, `vcs_type`, `vcs_type_label`)
 VALUES
-	(1,'GITHUB','GitHub'),
+	(1,'GITHUB','GitHub.com'),
 	(2,'GITHUB_ENTERPRISE','GitHub Enterprise'),
 	(3,'BITBUCKET','Bitbucket'),
 	(4,'SVN','Subversion');
