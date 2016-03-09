@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.5.44-log)
 # Database: codeengine
-# Generation Time: 2016-03-08 16:02:11 +0000
+# Generation Time: 2016-03-09 19:53:57 +0000
 # ************************************************************
 
 
@@ -114,60 +114,58 @@ CREATE TABLE `build` (
 
 
 
-# Dump of table build_step
+# Dump of table build_container
 # ------------------------------------------------------------
 
-DROP TABLE IF EXISTS `build_step`;
+DROP TABLE IF EXISTS `build_container`;
 
-CREATE TABLE `build_step` (
-  `build_step_id` int(11) NOT NULL AUTO_INCREMENT,
+CREATE TABLE `build_container` (
+  `build_container_id` int(11) NOT NULL AUTO_INCREMENT,
+  `build_container_image_id` int(11) NOT NULL,
+  `build_container_label` varchar(255) NOT NULL,
+  PRIMARY KEY (`build_container_id`),
+  UNIQUE KEY `build_container_id_uindex` (`build_container_id`),
+  UNIQUE KEY `build_container_label_uindex` (`build_container_label`),
+  KEY `build_container_image_id_fk` (`build_container_image_id`),
+  CONSTRAINT `build_container_image_id_fk` FOREIGN KEY (`build_container_image_id`) REFERENCES `container_image` (`container_image_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a build container instance (in which a project of a certain type is built/tested), e.g. "Java", "PHP", etc. ';
+
+LOCK TABLES `build_container` WRITE;
+/*!40000 ALTER TABLE `build_container` DISABLE KEYS */;
+
+INSERT INTO `build_container` (`build_container_id`, `build_container_image_id`, `build_container_label`)
+VALUES
+	(1,1,'nodejs'),
+	(2,2,'Java 8');
+
+/*!40000 ALTER TABLE `build_container` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
+# Dump of table build_event
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `build_event`;
+
+CREATE TABLE `build_event` (
+  `build_event_id` int(11) NOT NULL AUTO_INCREMENT,
   `build_id` int(11) NOT NULL,
-  `artifact_id` int(11) NOT NULL,
-  `build_step_type_id` int(11) NOT NULL,
   `result_type_id` int(11) NOT NULL,
+  `artifact_id` int(11) DEFAULT NULL,
+  `event_name` varchar(255) NOT NULL,
   `started` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `finished` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `build_step_message` longtext,
-  PRIMARY KEY (`build_step_id`),
-  UNIQUE KEY `build_step_id_uindex` (`build_step_id`),
-  KEY `build_step_build_id_fk` (`build_id`),
-  KEY `build_step_artifact_id_fk` (`artifact_id`),
-  KEY `build_step_type_id_fk` (`build_step_type_id`),
-  KEY `build_step_result_type_id_fk` (`result_type_id`),
-  CONSTRAINT `build_step_artifact_id_fk` FOREIGN KEY (`artifact_id`) REFERENCES `artifact` (`artifact_id`),
-  CONSTRAINT `build_step_build_id_fk` FOREIGN KEY (`build_id`) REFERENCES `build` (`build_id`),
-  CONSTRAINT `build_step_result_type_id_fk` FOREIGN KEY (`result_type_id`) REFERENCES `result_type` (`result_type_id`),
-  CONSTRAINT `build_step_type_id_fk` FOREIGN KEY (`build_step_type_id`) REFERENCES `build_step_type` (`build_step_type_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `event_message` longtext,
+  PRIMARY KEY (`build_event_id`),
+  UNIQUE KEY `build_event_id_uindex` (`build_event_id`),
+  KEY `build_event_build_id_fk` (`build_id`),
+  KEY `build_event_result_type_id_fk` (`result_type_id`),
+  KEY `build_event_artifact_id_fk` (`artifact_id`),
+  CONSTRAINT `build_event_artifact_id_fk` FOREIGN KEY (`artifact_id`) REFERENCES `artifact` (`artifact_id`),
+  CONSTRAINT `build_event_build_id_fk` FOREIGN KEY (`build_id`) REFERENCES `build` (`build_id`),
+  CONSTRAINT `build_event_result_type_id_fk` FOREIGN KEY (`result_type_id`) REFERENCES `result_type` (`result_type_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a build event instance.';
 
-
-
-# Dump of table build_step_type
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `build_step_type`;
-
-CREATE TABLE `build_step_type` (
-  `build_step_type_id` int(11) NOT NULL AUTO_INCREMENT,
-  `build_step_type` varchar(64) NOT NULL,
-  `build_step_type_label` varchar(255) NOT NULL,
-  PRIMARY KEY (`build_step_type_id`),
-  UNIQUE KEY `build_step_type_id_uindex` (`build_step_type_id`),
-  UNIQUE KEY `build_step_type_label_uindex` (`build_step_type_label`),
-  UNIQUE KEY `build_step_type_uindex` (`build_step_type`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Enumeration of build steps.';
-
-LOCK TABLES `build_step_type` WRITE;
-/*!40000 ALTER TABLE `build_step_type` DISABLE KEYS */;
-
-INSERT INTO `build_step_type` (`build_step_type_id`, `build_step_type`, `build_step_type_label`)
-VALUES
-	(1,'BUILDING','Building'),
-	(2,'TESTING','Testing'),
-	(3,'DEPLOYING','Deploying');
-
-/*!40000 ALTER TABLE `build_step_type` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Dump of table build_trigger
@@ -266,6 +264,95 @@ VALUES
 UNLOCK TABLES;
 
 
+# Dump of table container_image
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `container_image`;
+
+CREATE TABLE `container_image` (
+  `container_image_id` int(11) NOT NULL AUTO_INCREMENT,
+  `container_registry_id` int(11) NOT NULL,
+  `image_repo` varchar(255) NOT NULL,
+  `image_tag` varchar(512) NOT NULL,
+  `image_label` varchar(255) NOT NULL,
+  PRIMARY KEY (`container_image_id`),
+  UNIQUE KEY `container_image_id_uindex` (`container_image_id`),
+  UNIQUE KEY `container_image_label_uindex` (`image_label`),
+  KEY `container_image_registry_id_fk` (`container_registry_id`),
+  CONSTRAINT `container_image_registry_id_fk` FOREIGN KEY (`container_registry_id`) REFERENCES `container_registry` (`container_registry_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a reference to a container image.';
+
+LOCK TABLES `container_image` WRITE;
+/*!40000 ALTER TABLE `container_image` DISABLE KEYS */;
+
+INSERT INTO `container_image` (`container_image_id`, `container_registry_id`, `image_repo`, `image_tag`, `image_label`)
+VALUES
+	(1,1,'node','wheezy','nodejs (wheezy)'),
+	(2,1,'java','openjdk-8-jdk','OpenJDK 8');
+
+/*!40000 ALTER TABLE `container_image` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
+# Dump of table container_registry
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `container_registry`;
+
+CREATE TABLE `container_registry` (
+  `container_registry_id` int(11) NOT NULL AUTO_INCREMENT,
+  `container_type_id` int(11) NOT NULL,
+  `registry_url` varchar(512) NOT NULL,
+  `label` varchar(512) NOT NULL,
+  `registry_credential_id` int(11) NOT NULL,
+  PRIMARY KEY (`container_registry_id`),
+  UNIQUE KEY `container_registry_id_uindex` (`container_registry_id`),
+  KEY `container_registry_container_type_id_fk` (`container_type_id`),
+  KEY `container_registry_credential_id_fk` (`registry_credential_id`),
+  CONSTRAINT `container_registry_credential_id_fk` FOREIGN KEY (`registry_credential_id`) REFERENCES `credential` (`credential_id`),
+  CONSTRAINT `container_registry_container_type_id_fk` FOREIGN KEY (`container_type_id`) REFERENCES `container_type` (`container_type_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of container registries, e.g. "DockerHub", "HPE Docker US-EAST", "Amazon ECR", etc.';
+
+LOCK TABLES `container_registry` WRITE;
+/*!40000 ALTER TABLE `container_registry` DISABLE KEYS */;
+
+INSERT INTO `container_registry` (`container_registry_id`, `container_type_id`, `registry_url`, `label`, `registry_credential_id`)
+VALUES
+	(1,2,'https://api.hub.docker.com','DockerHub',1);
+
+/*!40000 ALTER TABLE `container_registry` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
+# Dump of table container_type
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `container_type`;
+
+CREATE TABLE `container_type` (
+  `container_type_id` int(11) NOT NULL AUTO_INCREMENT,
+  `container_type` varchar(64) NOT NULL,
+  `container_type_label` varchar(255) NOT NULL,
+  PRIMARY KEY (`container_type_id`),
+  UNIQUE KEY `container_type_container_type_id_uindex` (`container_type_id`),
+  UNIQUE KEY `container_type_container_type_uindex` (`container_type`),
+  UNIQUE KEY `container_type_container_type_label_uindex` (`container_type_label`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Enumeration of container technology types, e.g. "DOCKER", "ROCKET", "DRAWBRIDGE", "LXD"';
+
+LOCK TABLES `container_type` WRITE;
+/*!40000 ALTER TABLE `container_type` DISABLE KEYS */;
+
+INSERT INTO `container_type` (`container_type_id`, `container_type`, `container_type_label`)
+VALUES
+	(1,'DOCKER','Docker'),
+	(2,'ROCKET','CoreOS Rocket'),
+	(3,'DRAWBRIDGE','Microsoft Drawbridge'),
+	(4,'LXD','Canonical LXD');
+
+/*!40000 ALTER TABLE `container_type` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
 # Dump of table credential
 # ------------------------------------------------------------
 
@@ -338,13 +425,17 @@ CREATE TABLE `deployment` (
   `build_id` int(11) NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `browse_url` varchar(512) DEFAULT NULL,
+  `application_id` varchar(512) DEFAULT NULL,
+  `environment_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`deployment_id`),
   UNIQUE KEY `deployment_id_uindex` (`deployment_id`),
   KEY `deployment_project_id_fk` (`project_id`),
   KEY `deployment_build_id_fk` (`build_id`),
+  KEY `deployment_environment_id_fk` (`environment_id`),
+  CONSTRAINT `deployment_environment_id_fk` FOREIGN KEY (`environment_id`) REFERENCES `environment` (`environment_id`),
   CONSTRAINT `deployment_build_id_fk` FOREIGN KEY (`build_id`) REFERENCES `build` (`build_id`),
   CONSTRAINT `deployment_project_id_fk` FOREIGN KEY (`project_id`) REFERENCES `project` (`project_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a deployment of a project to a target environment.';
 
 
 
@@ -545,24 +636,24 @@ CREATE TABLE `project` (
   `description` longtext,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `repo_id` int(11) NOT NULL,
-  `runtime_type_id` int(11) NOT NULL,
   `repo_credential_id` int(11) NOT NULL,
+  `build_container_id` int(11) NOT NULL,
   PRIMARY KEY (`project_id`),
   UNIQUE KEY `project_id_uindex` (`project_id`),
   KEY `project_repo_id_fk` (`repo_id`),
-  KEY `project_runtime_type_id_fk` (`runtime_type_id`),
   KEY `project_repo_credential_id_fk` (`repo_credential_id`),
+  KEY `project_build_container_id_fk` (`build_container_id`),
+  CONSTRAINT `project_build_container_id_fk` FOREIGN KEY (`build_container_id`) REFERENCES `build_container` (`build_container_id`),
   CONSTRAINT `project_repo_credential_id_fk` FOREIGN KEY (`repo_credential_id`) REFERENCES `credential` (`credential_id`),
-  CONSTRAINT `project_repo_id_fk` FOREIGN KEY (`repo_id`) REFERENCES `repo` (`repo_id`),
-  CONSTRAINT `project_runtime_type_id_fk` FOREIGN KEY (`runtime_type_id`) REFERENCES `runtime_type` (`runtime_type_id`)
+  CONSTRAINT `project_repo_id_fk` FOREIGN KEY (`repo_id`) REFERENCES `repo` (`repo_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a CodeEngine project.';
 
 LOCK TABLES `project` WRITE;
 /*!40000 ALTER TABLE `project` DISABLE KEYS */;
 
-INSERT INTO `project` (`project_id`, `project_name`, `description`, `created`, `repo_id`, `runtime_type_id`, `repo_credential_id`)
+INSERT INTO `project` (`project_id`, `project_name`, `description`, `created`, `repo_id`, `repo_credential_id`, `build_container_id`)
 VALUES
-	(1,'neil-schema-2','It\'s a new project!','2016-03-08 06:24:26',1,5,4);
+	(1,'neil-schema-2','It\'s a new project!','2016-03-09 12:11:22',1,4,2);
 
 /*!40000 ALTER TABLE `project` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -667,8 +758,8 @@ CREATE TABLE `repo_github` (
   PRIMARY KEY (`repo_id`),
   UNIQUE KEY `repo_github_repo_id_uindex` (`repo_id`),
   KEY `repo_github_webhook_credential_id_fk` (`webhook_credential_id`),
-  CONSTRAINT `repo_github_webhook_credential_id_fk` FOREIGN KEY (`webhook_credential_id`) REFERENCES `credential` (`credential_id`),
-  CONSTRAINT `repo_github_repo_id_fk` FOREIGN KEY (`repo_id`) REFERENCES `repo` (`repo_id`)
+  CONSTRAINT `repo_github_repo_id_fk` FOREIGN KEY (`repo_id`) REFERENCES `repo` (`repo_id`),
+  CONSTRAINT `repo_github_webhook_credential_id_fk` FOREIGN KEY (`webhook_credential_id`) REFERENCES `credential` (`credential_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a reference to a GitHub repo. This table is used in conjunction with the generic "repo" table.';
 
 LOCK TABLES `repo_github` WRITE;
@@ -722,37 +813,6 @@ VALUES
 	(3,'FAILURE','Failure');
 
 /*!40000 ALTER TABLE `result_type` ENABLE KEYS */;
-UNLOCK TABLES;
-
-
-# Dump of table runtime_type
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `runtime_type`;
-
-CREATE TABLE `runtime_type` (
-  `runtime_type_id` int(11) NOT NULL AUTO_INCREMENT,
-  `runtime_type` varchar(64) NOT NULL,
-  `runtime_type_label` varchar(255) NOT NULL,
-  PRIMARY KEY (`runtime_type_id`),
-  UNIQUE KEY `runtime_type_id_uindex` (`runtime_type_id`),
-  UNIQUE KEY `runtime_type_label_uindex` (`runtime_type_label`),
-  UNIQUE KEY `runtime_type_uindex` (`runtime_type`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-LOCK TABLES `runtime_type` WRITE;
-/*!40000 ALTER TABLE `runtime_type` DISABLE KEYS */;
-
-INSERT INTO `runtime_type` (`runtime_type_id`, `runtime_type`, `runtime_type_label`)
-VALUES
-	(1,'JAVA','Java'),
-	(2,'PHP','PHP'),
-	(3,'DOTNET','.NET'),
-	(4,'RUBY','Ruby'),
-	(5,'GO','Go'),
-	(6,'NODEJS','nodejs');
-
-/*!40000 ALTER TABLE `runtime_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
 
