@@ -1,0 +1,2570 @@
+# swagger.yml - Primary swagger YAML file for HelionCE REST API
+
+
+swagger: '2.0'
+
+# Document metadata
+info:
+  version: '2.0'
+  title: Helion Code Engine REST API
+  description: REST API for the Helion Code Engine (HelionCE) Continuous Integration & Deployment platform.
+
+
+schemes:
+  - http
+host: crest.proxy:4001
+basePath: /v2
+
+
+##########################################################################
+#                                                                        #
+#                               PATHS                                    #
+#                                                                        #
+##########################################################################
+paths:
+
+
+
+  ######################### /vcs #########################
+  '/vcs':
+
+    post:
+      tags:
+        - Vcs
+      summary: Register a VCS instance.
+      description: |
+        Register a Version Control System instance, such as GitHub, a GitHub Enterprise instance, a SVN instance, etc..
+      operationId: registerVcs
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: vcs
+          in: body
+          description: The VCS to register.
+          schema:
+            $ref: '#/definitions/Vcs'
+          required: true
+      responses:
+        201:
+          description: VCS registered.
+          schema:
+            $ref: '#/definitions/Vcs'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    get:
+      tags:
+        - Vcs
+      summary: List VCS instances.
+      description: |
+        List the registered VCS instances.
+      operationId: getVcses # ugly!
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Array of registered VCS instances.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Vcs'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+
+  ######################### /vcs/{vcsId} #########################
+  '/vcs/{vcsId}':
+    delete:
+      tags:
+        - Vcs
+      summary: Unregister the specified VCS.
+      operationId: unregisterVcs
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      parameters:
+        - name: vcsId
+          in: path
+          description: The (internal) VCS id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+          204:
+            description: VCS unregistered.
+          404:
+            description: Item with specified id not found.
+
+    get:
+      tags:
+        - Vcs
+      summary: Get the VCS specified in the request.
+      operationId: getVcs
+      produces:
+        - application/json
+      parameters:
+        - name: vcsId
+          in: path
+          description: The (internal) item id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: The VCS instance.
+          schema:
+            $ref: '#/definitions/Vcs'
+        404:
+          description: Item with specified id not found.
+
+    # FIXME: need to add PUT/PATCH
+
+
+
+  ######################### /container/registry #########################
+  '/container/registry':
+
+    post:
+      tags:
+        - Container
+      summary: Register a ContainerRegistry instance.
+      description: |
+        Register a ContainerRegistry instance, such as DockerHub, or a local registry.
+      operationId: registerContainerRegistry
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: vcs
+          in: body
+          description: The item to register.
+          schema:
+            $ref: '#/definitions/ContainerRegistry'
+          required: true
+      responses:
+        201:
+          description: Item registered.
+          schema:
+            $ref: '#/definitions/ContainerRegistry'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    get:
+      tags:
+        - Container
+      summary: List ContainerRegistry instances.
+      description: |
+        List the registered ContainerRegistry instances.
+      operationId: getContainerRegistries
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Array of registered ContainerRegistry instances.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ContainerRegistry'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  ######################### /container/types #########################
+  '/container/types':
+
+    get:
+      tags:
+        - Container
+      summary: |
+        Enumeration of Container types, e.g. `DOCKER`, `ROCKET`, etc.
+      operationId: getContainerTypes
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Array of Container types.
+          schema:
+            type: array
+            items:
+              type: string
+
+
+
+
+  ######################### /container/registry/{registryId} #########################
+  '/container/registry/{registryId}':
+    delete:
+      tags:
+        - Container
+      summary: Unregister the specified ContainerRegistry.
+      operationId: unregisterContainerRegistry
+      produces:
+        - application/json
+      parameters:
+        - name: registryId
+          in: path
+          description: The (internal) ContainerRegistry id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+          204:
+            description: Item unregistered.
+          404:
+            description: Item with specified id not found.
+
+    get:
+      tags:
+        - Container
+      summary: Get the ContainerRegistry specified in the request.
+      operationId: getContainerRegistry
+      produces:
+        - application/json
+      parameters:
+        - name: registryId
+          in: path
+          description: The (internal) item id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: The ContainerRegistry instance.
+          schema:
+            $ref: '#/definitions/ContainerRegistry'
+        404:
+          description: Item with specified id not found.
+
+    # FIXME: need to add PUT/PATCH
+
+
+  ######################### /artifacts/{artifactId} #########################
+  '/artifacts/{artifactId}':
+    # This is a HTTP operation
+    delete:
+      tags:
+        - Artifact
+      summary: Deletes the artifact specified in the request params.
+      description: |
+        Deletes the artifact specified in the request params.
+        If artifact with specified id not found, returns 404.
+      operationId: deleteArtifact
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: artifactId
+          in: path
+          description: The artifact id we want to delete.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+          # Response code
+          404:
+            description: Artifact with specified id is not found.
+          # Response code
+          204:
+            description: Artifact succefully deleted.
+
+    get:
+      tags:
+        - Artifact
+      summary: Gets an artifact with id specified in the request.
+      description: |
+        Gets an artifact with id specified in the request.
+        If there is no artifact with given id, returns 404.
+      operationId: getArtifact
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: artifactId
+          in: path
+          description: The artifact id we want to return.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response an artifact.
+          # A schema describing the response object.
+          schema:
+            $ref: '#/definitions/Artifact'
+        404:
+          description: Artifact with given id not found.
+
+
+  '/artifacts/{artifactId}/download':
+     get:
+        summary: Download the artifact specified in the request params.
+        description: |
+          Download the artifact specified in the request params with the artifact streamed in the response. On error returns 500.
+        operationId: downloadArtifact
+        consumes:
+          - application/json # This operation doesn't actually consume anything, this should be removed?
+        produces:
+          - application/json
+        # This is array of GET operation parameters:
+        parameters:
+          - name: artifactId
+            in: path
+            description: The artifact id to download.
+            required: true
+            type: integer
+            format: int32
+        # Expected responses for this operation:
+        responses:
+          # Response code
+          200:
+            description: Successful response with a stream of artifacts.
+
+
+  '/builds/{buildId}/':
+    # This is a HTTP operation
+    get:
+      summary: Gets the build specified by `buildId`
+      description: |
+        Get the build specified in the request params.
+        If build with specified id not found, returns 404.
+      operationId: getBuild
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: buildId
+          in: path
+          description: The build id for the build we want to get.
+          required: true
+          type: integer
+          format: int32put
+
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Build found.
+          # A schema describing your response object.
+          schema:
+            $ref: '#/definitions/Build'
+        404:
+          description: Build not found.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    put:
+      summary: Update the status and/or details of the specified build.
+      description: |
+        Update a new build per the request params and return 200.
+        If failed to update return 500.
+      operationId: updateBuild
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      # Returns :
+      parameters:
+        - name: buildId
+          in: path
+          description: The build id to update.
+          required: true
+          type: integer
+          format: int32
+
+        - name: build
+          in: body
+          description: The build JSON to post.
+          schema:
+            $ref: '#/definitions/Build'
+          required: true
+
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Updates a build.
+
+
+  '/builds/{buildId}/artifacts':
+    get:
+      summary: Get the set of artifacts associated with the build specified in the request.
+      description: |
+        Get the set of artifacts associated with the build specified in the request.
+        If there are no artifacts, returns an empty list.
+      operationId: getArtifactsForBuild
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: buildId
+          in: path
+          description: The build id to list artifacts for.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a listing of artifacts can be empty.
+          # A schema describing the response object.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Artifact'
+
+    post:
+      summary: Create a new artifact per the request params.
+      description: |
+        Create a new artifact per the request params. and return 201.
+        If failed to create returns 500.
+      operationId: createArtifact
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: buildId
+          in: path
+          description: The build id to create artifact for.
+          required: true
+          type: integer
+          format: int32
+
+        - name: artifact
+          in: body
+          description: The artifact JSON to post.
+          schema:
+            $ref: '#/definitions/Artifact'
+          required: true
+
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        201:
+          description: Successful response with details of the newly created post deployment.
+          # A schema describing the response object.
+          schema:
+            $ref: '#/definitions/Artifact'
+
+
+  '/builds/{buildId}/workspace':
+    get:
+      summary: Download the workspace specified in the request params.
+      description: |
+        Download the workspace specified in the request params with the workspace streamed in the response.
+        On error returns 500.
+      operationId: downloadWorkspace
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: buildId
+          in: path
+          description: The build id to download workspace for.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a stream of of workspace.
+
+
+  '/builds/{buildId}/logs/{type}/upload':
+    post:
+      summary: Uploads a log.
+      description: |
+        Uploads a log per the request params. and return 200.
+        If failed to upload log returns 500.
+      operationId: uploadLog
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: buildId
+          in: path
+          description: The build id to upload log for.
+          required: true
+          type: integer
+          format: int32
+
+        - name: type
+          in: path
+          description: The type of the log. # what is the schema for this?
+          required: true
+          type: string
+      # - name: log
+      #   in: body
+      #   description: The log. # what is the schema for this?
+      #   required: true
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with artifact object.
+          # A schema describing the response object.
+          schema:
+            $ref: '#/definitions/Artifact'
+
+
+  '/builds/{buildId}/workspace/upload':
+    post:
+      summary: Uploads a workspace.
+      description: |
+        Upload workspace per the request params. and return 200.
+        If failed to upload workspace returns 500.
+      operationId: uploadWorkspace
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: buildId
+          in: path
+          description: The build id to upload workspa for.
+          required: true
+          type: integer
+          format: int32
+
+      # - name: log
+      #   in: body
+      #   description: The log. # what is the schema for this?
+      #   required: true
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with artifact object.
+          # A schema describing the response object.
+          schema:
+            $ref: '#/definitions/Artifact'
+
+
+  '/deployments/{deploymentId}':
+    get:
+      summary: Get a deployment with deployment id specified in the request.
+      description: |
+        Get a deployment with deployment id specified in the request.
+        If there is no deployment, returns 404.
+      operationId: getDeployment
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: deploymentId
+          in: path
+          description: The deployment id to find and return deployment.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a deployments.
+          # A schema describing the response object.
+          schema:
+            $ref: '#/definitions/Deployment'
+
+    delete:
+      summary: Delete the deployment specified in the request.
+      description: |
+        Delete the deployment specified in the request.
+        If there is no deployment, returns 404.
+      operationId: deleteDeployment
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: deploymentId
+          in: path
+          description: The deployment id to find and return deployment.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+          # Response code
+          404:
+            description: Deployment with specified id is not found.
+          # Response code
+          204:
+            description: Deployment Succefully deleted.
+
+
+  # This is the path endpoint, with a variable sub
+  '/notificationtargets/{notificationTargetId}':
+    # This is a HTTP operation
+    delete:
+      summary: Delete the notification target specified in the request.
+      description: |
+        Delete the notification target specified in the request.
+        If notification target with specified id not found, returns 404.
+      operationId: deleteNotificationTarget
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: notificationTargetId
+          in: path
+          description: Internal id for the notification target we want to delete.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+          # Response code
+          404:
+            description: When notification target with specified id is not found.
+          # Response code
+          204:
+            description: Succefully deleted.
+
+
+  # This is the path endpoint, with a variable sub
+  '/notificationtargets/{notificationTargetId}/':
+    # This is a HTTP operation
+    get:
+      summary: Get the notification target specified in the request.
+      description: |
+        Get the notification target specified in the request. if not found, we return 404.
+      operationId: getNotificationTarget
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: notificationTargetId
+          in: path
+          description: The internal notificationtarget id.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a notificationtarget
+          # A schema describing your response object.
+
+          schema:
+            $ref: '#/definitions/NotificationTarget'
+        # Response code
+        404:
+          description: Notification taget not found.
+
+
+  '/projects/{projectId}/':
+
+    get:
+      summary: Get the project specified by `projectId`.
+      description: |
+        Get the project specified in the request. If the
+        item is not found, return a `404`.
+      operationId: getProject
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: projectId
+          in: path
+          description: The id of the project to get.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a `project` object
+          schema:
+            $ref: '#/definitions/Project'
+        # Response code
+        404:
+          description: The specified project is not found.
+
+    put:
+      summary: Update the project specified by `projectId`.
+      description: |
+        Update the specified project and return the updated project object.
+      operationId: updateProject
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: projectId
+          in: path
+          description: The id of the project.
+          required: true
+          type: integer
+          format: int32
+
+        - name: project
+          required: true
+          in: body
+          description: The project object.
+          schema:
+            $ref: '#/definitions/Project'
+
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: The updated project.
+          schema:
+            $ref: '#/definitions/Project'
+        # Response code
+        default:
+          description: Failed to update the project.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    delete:
+      summary: Delete the project specified by `projectId`.
+      description: |
+        Delete the project referenced in the request.
+        If the project is not found, return `404`.
+      operationId: deleteProject
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: projectId
+          in: path
+          description: The id of the project to delete.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        204:
+          description: Successfully deleted.
+        # Response code
+        404:
+          description: When environment with specified id is not found or there are projects using it.
+        default:
+          description: Unexpected error.
+
+
+  # This is the path endpoint, with a variable sub
+  '/projects/{projectId}/builds/':
+    # This is a HTTP operation
+    get:
+      summary: Get the builds associated with the project.
+      description: |
+        Get the builds associated with the project specified in the request params.
+        If not build are found, returns an empty JSON array.
+      operationId: getBuildsForProject
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: projectId
+          in: path
+          description: The project id to list builds for.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a listing of builds.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Build'
+
+    # This is a HTTP operation
+    post:
+      summary: Create a new build per the request params.
+      description: |
+        Create a new build per the request params and return 201.
+        If failed to create return 500.
+      operationId: createBuild
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: projectId
+          in: path
+          description: The project id to create build for.
+          required: true
+          type: integer
+          format: int32
+
+        - name: build
+          in: body
+          description: The build JSON to post.
+          schema:
+            $ref: '#/definitions/Build'
+          required: true
+
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        201:
+          description: Creates a new build.
+          # A schema describing the response object.
+          schema:
+            $ref: '#/definitions/Build'
+
+
+  '/projects/{projectId}/start_build':
+
+    post:
+      summary: Start a new build for a project.
+      description: |
+        Start the build process for the specified project.
+      operationId: startBuild
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      # Returns :
+      parameters:
+        - name: projectId
+          in: path
+          description: The project id to start build for.
+          required: true
+          type: integer
+          format: int32
+
+        - name: commitSha # Why is this named both commitSha and commitHash in various places?
+          in: body
+          description: The commitSha.
+          required: true # commitSha should be optional? If not hash provided, CREST should retrieve the most recent one.
+          schema:
+            type: object
+            required:
+              - commitHash
+            properties:
+              commitHash:
+                type: string
+
+
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        201:
+          description: Build started.
+          schema:
+            $ref: '#/definitions/Build'
+        # Response code
+        500:
+          description: Failed to start the build.
+
+
+  '/projects/{projectId}/deployments':
+    get:
+      summary: Get the set of deployments associated with the project specified in the request.
+      description: |
+        Get the set of deployments associated with the project specified in the request.
+        If there are no deployments, returns an empty list.
+      operationId: getDeploymentsForProject
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: projectId
+          in: path
+          description: The project id to list deployments for.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a listing of deployments.
+          # A schema describing the response object.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Deployment'
+
+    post:
+      summary: Create a deployment for a project.
+      description: |
+        Creates a new deployment for the specified project and return 201.
+        If failed to create returns 404.
+      operationId: createDeployment
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: projectId
+          in: path
+          description: The project id to create post deployment actions for.
+          required: true
+          type: integer
+          format: int32
+
+        - name: deployment
+          in: body
+          description: The deployment JSON to post.
+          schema:
+            $ref: '#/definitions/Deployment'
+          required: true
+
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        201:
+          description: Successful response with details of the newly created post deployment.
+          # A schema describing the response object.
+          schema:
+            $ref: '#/definitions/Deployment'
+
+
+  '/projects/{projectId}/postdeployactions':
+    get:
+      summary: Get the set of post deployment actions associated with the project specified in the request.
+      description: |
+        Get the set of post deployment actions associated with the project specified in the request.
+        If there are no such post deploy actions, return an empty list.
+      operationId: getProjectPostDeployActions
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: projectId
+          in: path
+          description: The project id to list post deployment actions for.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a listing of post deployment actions.
+          # A schema describing the response object.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PostDeployAction'
+
+    post:
+      summary: Create a post deploy action
+      description: |
+        Creates a new post deploy action for the specified project and return 201.
+        If failed to create returns 500.
+      operationId: createPostDeployAction
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: projectId
+          in: path
+          description: The project id to create post deployment actions for.
+          required: true
+          type: integer
+          format: int32
+
+        - name: postdeploymentaction
+          in: body
+          description: The project JSON to post.
+          schema:
+            $ref: '#/definitions/PostDeployAction'
+          required: true
+
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        201:
+          description: Successful response with details of the newly created post deployment action.
+          # A schema describing the response object.
+          schema:
+            $ref: '#/definitions/PostDeployAction'
+
+
+  # This is the path endpoint, with a variable sub
+  '/projects/builds/{buildId}':
+    # This is a HTTP operation
+    delete:
+      summary: Deletes the build specified in the request params.
+      description: |
+        Deletes the build specified in the request params.
+        If build with specified id not found, returns 404.
+      operationId: deleteBuild
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: buildId
+          in: path
+          description: The build id for the build we want to delete.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+          # Response code
+          404:
+            description: Build with specified id is not found.
+          # Response code
+          204:
+            description: Succefully deleted.
+
+
+  '/postdeployactions/{postDeployActionId}':
+    get:
+      summary: Get the post deploy action specified in the request.
+      description: |
+        Get the post deploy action specified in the request.
+        If there is no such post deploy action, return 404.
+      operationId: getPostDeployAction
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: postDeployActionId
+          in: path
+          description: The post deployment actions id to get.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a post deployment action.
+          # A schema describing the response object.
+          schema:
+            $ref: '#/definitions/PostDeployAction'
+
+    delete:
+        summary: Deletes the post deploy action specified in the request.
+        description: |
+          Deletes the post deploy action specified in the request.
+          If there is no such post deploy action, return 404.
+        operationId: deletePostDeplyAction
+        consumes:
+          - application/json # This operation doesn't actually consume anything, this should be removed?
+        produces:
+          - application/json
+        # This is array of Delete operation parameters:
+        parameters:
+          - name: postDeployActionId
+            in: path
+            description: The pot deployment action id to delete.
+            required: true
+            type: integer
+            format: int32
+        # Expected responses for this operation:
+        responses:
+            # Response code
+            404:
+              description: Post deployment action with specified id is not found.
+            # Response code
+            204:
+              description: Post deployment action succefully deleted.
+
+
+  '/projects/{projectId}/stormrunner/connect':
+    post:
+      summary: Connects to storm runner end point.
+      description: |
+        Connects to storm runner end point and returns list of tests.
+        If failed to autheticate it returns 403 and if no tests found return 404.
+      operationId: connectToStormRunner
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      # This is array of Connect operation parameters:
+      parameters:
+        - name: projectId
+          in: path
+          description: The project id.
+          required: true
+          type: integer
+          format: int32
+
+        - name: stormRunnerRequest
+          in: body
+          description: The storm runner request JSON to post.
+          schema:
+            $ref: '#/definitions/StormRunnerRequest'
+          required: true
+
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: |
+            Successful response with list of tests.
+          # A schema describing the response object.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/StormRunnerTest'
+         # Response code
+        404:
+          description: When tests not were found for the user with given tenanat id.
+         # Response code
+        403:
+          description: When user is not authenticated in storm runner.
+
+
+  # This is the path endpoint, with a variable sub
+  '/projects/{projectId}/notificationtargets/':
+    # This is a HTTP operation
+    get:
+      summary: Get the set of notification targets associated with the project specified in the request.
+      description: |
+        Get the set of notification targets associated with the project specified in
+        the request. if there is nothing found, we return empty list.
+      operationId: getNotificationTargetsForProject
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: projectId
+          in: path
+          description: The internal project id.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a list of notification targets or empty list if there is no notification targets in the database.
+          # A schema describing your response object.
+
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/NotificationTarget'
+
+    post:
+      summary: Create a new notification target for a project.
+      description: |
+        Create a new notification target for the specified project and return 201.
+        If failed to create returns 500.
+      operationId: createNotificationTarget
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      # Returns :
+      parameters:
+        - name: projectId
+          in: path
+          description: The project id to create notification target for.
+          required: true
+          type: integer
+          format: int32
+
+        - name: notificationtarget
+          in: body
+          description: The target JSON to post.
+          schema:
+            $ref: '#/definitions/NotificationTarget'
+          required: true
+
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        201:
+          description: Creates a new notification target.
+          schema:
+            $ref: '#/definitions/NotificationTarget'
+       # Response code
+        500:
+          description: Failed to creates a new notification target.
+
+
+  '/targets/{targetId}/':
+    # This is a HTTP operation
+    get:
+      summary: Get the deployment environment/target specified by `targetId`.
+      description: |
+        Get the deployment environment/target specified in the request. If the
+        item is not found, return a `404/NOT_FOUND`.
+      operationId: getEnvironment
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: targetId
+          in: path
+          description: The internal target id.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a target/environment object
+          # A schema describing your response object.
+          schema:
+            $ref: '#/definitions/Environment'
+        # Response code
+        404:
+          description: The specified target/environment is not found.
+
+    put:
+      summary: Update the deployment environment specified by `targetId`.
+      description: |
+        Update the specified deployment environment and return the updated environment.
+      operationId: updateEnvironment
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: targetId
+          in: path
+          description: The id of the environment.
+          required: true
+          type: integer
+          format: int32
+
+        - name: target
+          required: true
+          in: body
+          description: The target object.
+          schema:
+            $ref: '#/definitions/Environment'
+
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: The updated target.
+          schema:
+            $ref: '#/definitions/Environment'
+        # Response code
+        default:
+          description: Failed to update a target.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    # This is a HTTP operation
+    delete:
+      summary: Delete the deployment environment/target specified by `targetId`.
+      description: |
+        Delete the deployment environment/target referenced in the request and return 204.
+        If the target is not found, returns `404`.
+      operationId: deleteEnvironment
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: targetId
+          in: path
+          description: The environment id we want to delete.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        500:
+          description: When environment with specified id is not found or there are projects using it.
+        # Response code
+        204:
+          description: Successfully deleted.
+
+
+  '/targets/{targetId}/projects/':
+    # This is a HTTP operation
+    get:
+      summary: Get the projects associated with the environment specified by `targetId`.
+      description: |
+        Get the set of projects associated with the deployment environment
+        specified in the request. If there are no matching projects, return a 200/OK
+        and an empty set.
+      operationId: getProjectsForEnvironment
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: targetId
+          in: path
+          description: The internal target id.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a list of projects or empty list if there is no projects targeting the target/environment.
+          # A schema describing your response object.
+
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Project'
+
+        404:
+          description: No environment matching `targetId`.
+
+        default:
+          description: Unexpected error.
+
+
+  # This is the path endpoint, with a variable sub
+  '/types/notificationtargets/':
+    # This is a HTTP operation
+    get:
+      summary: Get the set of Notification Target types.
+      description: |
+        Get the set of Notification Target types.
+      operationId: getNotificationTargetTypes
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+
+      # Expected responses for this operation:
+      responses:
+        # Response code FIXME: there should be a reference to an object here
+        200:
+          description: Successful response with a notificationtarget types
+
+
+  '/types/postdeployactions':
+    get:
+      summary: Get the set of Post Deploy Action types.
+      description: |
+        Get the set of Post Deploy Action types.
+      operationId: getPostDeployActionTypes
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+        # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with Post Deploy Action types.
+
+
+  # This is the path endpoint, with a variable sub
+  '/users':
+    # This is a HTTP operation
+    post:
+      summary: Create a HelionCE user with the details specified in the request body.
+      description: |
+        Create a HelionCE user with the details specified in the request body and return 201.
+        If failed to create returns 500.
+      operationId: createUser
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      # Returns :
+      parameters:
+       - name: user
+         in: body
+         description: The user JSON to post.
+         schema:
+           $ref: '#/definitions/User'
+         required: true
+
+      # Expected responses for this operation:
+      responses:
+        # Response code FIXME: does this return an object
+        201:
+          description: Creates a new user.
+          # A schema describing your response object.
+
+          schema:
+            $ref: '#/definitions/User'
+
+       # Response code
+        500:
+          description: Failed to creates a new user.
+
+
+  # This is the path endpoint, with a variable sub
+  '/users/{userId}/':
+    # This is a HTTP operation
+    get:
+      summary: Returns the HelionCE user with the specified ID.
+      description: |
+        Returns the HelionCE user with the specified ID. If there are no matching user, return a 404 not found.
+      operationId: getUser
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: userId
+          in: path
+          description: The user id.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a user object.
+          # A schema describing your response object.
+
+          schema:
+            $ref: '#/definitions/User'
+        # Response code
+        404:
+          description: user not found.
+
+    # This is a HTTP operation
+    put:
+      summary: Updates a user definition.
+      description: |
+        Updates a user definition and returns 200. If failed to update returns 500.
+      operationId: updateUser
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      # Returns :
+      parameters:
+        - name: userId
+          in: path
+          description: The user id to update user definition for.
+          required: true
+          type: integer
+          format: int32
+
+        - name: user
+          in: body
+          description: The user JSON to post.
+          schema:
+           $ref: '#/definitions/User'
+          required: true
+
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Updates a user.
+          # A schema describing your response object.
+
+          schema:
+            $ref: '#/definitions/User'
+
+        # Response code
+        500:
+          description: Failed to update a user.
+
+    delete:
+      summary: Delete the HelionCE user with the specified ID.
+      description: |
+        Delete the HelionCE user with the specified ID.
+        If user with specified id not found, returns 404.
+      operationId: deleteUser
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: userId
+          in: path
+          description: Id for ci/cd user we want to delete.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+          # Response code
+          404:
+            description: User with specified id is not found.
+          # Response code
+          204:
+            description: Succefully deleted.
+
+
+  '/users/{userId}/projects/': # Note: The trailing slash is necessary (at least in this case)
+    get:
+      summary: Get the projects owned by the user.
+      description: |
+        Get the list of projects that the specified user is an owner of.
+        If there are no such projects, return an empty list.
+      operationId: getProjectsForUser
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: userId
+          in: path
+          description: The user id to list projects for.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a listing of user projects.
+          # A schema describing the response object.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Project'
+
+    post:
+      summary: Create a new project
+      description: |
+        Create a new project for the specified user using the values in the payload.
+      operationId: createProject
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: userId
+          in: path
+          description: The user id to create the project for.
+          required: true
+          type: integer
+          format: int32
+
+        - name: project
+          in: body
+          description: The project JSON to post.
+          schema:
+            $ref: '#/definitions/Project'
+          required: true
+
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        201:
+          description: Successful response with details of the newly created project.
+          # A schema describing the response object.
+          schema:
+            $ref: '#/definitions/Project'
+
+
+  '/users/{userId}/targets/':
+
+    get:
+      summary: Get the set of deployment environments/targets associated with the user specified by `userId`.
+      description: |
+        Get the set of deployment environments/targets associated with the user
+        specified in the request. If there are no matching environments, return
+        a 200/OK and an empty set.
+      operationId: getEnvironmentsForUser
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed?
+      produces:
+        - application/json
+      parameters:
+        - name: userId
+          in: path
+          description: The user id to get environments for.
+          required: true
+          type: integer
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a list of targets or empty list if there is no targets for the user.
+          # A schema describing your response object.
+
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Environment'
+
+    post:
+      summary: Create a new deployment environment.
+      description: |
+        Create a new deployment environment for the specified user and per the params in the body.
+        Return 201 on success, and 500 on failure.
+      operationId: createEnvironment
+      consumes:
+        - application/json
+      produces:
+         - application/json
+      parameters:
+        - name: userId
+          in: path
+          description: The user id to create the environment for.
+          required: true
+          type: integer
+          format: int32
+
+        - name: target
+          in: body
+          description: The target JSON to post.
+          schema:
+            $ref: '#/definitions/Environment'
+          required: true
+
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        201:
+          description: Returns newly created target object.
+          schema:
+            $ref: '#/definitions/Environment'
+        # Response code
+        500:
+          description: Failed to creates a new target.
+
+
+  # This is the path endpoint, with a variable sub
+  '/users/github/{userId}/':
+    # This is a HTTP operation
+    get:
+      summary: Returns the GitHub user with the specified ID.
+      description: |
+        Returns the GitHub user with the specified ID. If there are no matching user, return a 404 not found.
+      operationId: getGitHubUser
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      # This is array of GET operation parameters:
+      parameters:
+        - name: userId
+          in: path
+          description: |
+            The GitHub user id.
+          required: true
+          type: string
+          format: int32
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response with a github user object.
+          # A schema describing your response object.
+
+          schema:
+            $ref: '#/definitions/User'
+        # Response code
+        404:
+          description: GitHub user not found.
+
+
+
+
+##########################################################################
+#                                                                        #
+#                         DEFINITIONS (MODELS)                           #
+#                                                                        #
+##########################################################################
+definitions:
+
+
+# Ultimately we'd like to move the definitions into a separate file, but the
+# swagger tooling is still buggy around external references.
+
+#  $ref: ./definitions.yml  # Commented out for now
+
+
+
+
+
+
+
+
+
+
+  ############## Build ##############
+  Build:
+    type: object
+    description: |
+      Models an individual build.
+    required:
+      - buildId
+      - projectId
+      - result
+      - resultMessage
+      - created
+      - buildTrigger
+    properties:
+      buildId:
+        type: integer
+        format: int32
+        description: The (internal) id of the build instance.
+      projectId:
+        type: integer
+        format: int32
+        description: The (internal) id of the project the build is associated with.
+      result:
+        type: string
+        description: Result of the build process.
+        enum: ["PENDING", "SUCCESS", "FAILURE"]
+      resultMessage:
+        type: string
+        description: Message associated with the build result.
+      buildTrigger:
+        $ref: '#/definitions/BuildTrigger'
+      created:
+        type: string
+        description: Build creation timestamp.
+        format: date-time
+      deployment:
+        $ref: '#/definitions/Deployment'
+
+
+
+  ############## BuildTrigger ##############
+  BuildTrigger:
+    type: object
+    description: |
+      Models a Generic build trigger event.
+    discriminator: triggerType
+    required:
+      - triggerId
+      - triggerType
+      - message
+      - author
+      - created
+    properties:
+      triggerId:
+        type: integer
+        format: int32
+        description: The (internal) id of the instance.
+      triggerType:
+        type: string
+        description: The type of build trigger. (e.g. manual, or PR, etc.)
+        enum: ["PullRequestBuildTrigger", "ManaulBuildTrigger"]
+      message:
+        type: string
+        description: The message associated with the build trigger event.
+      author:
+        type: string
+        description: The author of a commmit selected.
+      avatarUrl:
+        type: string
+        description: The compare url of a commmit selected.
+      created:
+        type: string
+        format: date-time
+        description: The date and time of when the build is created.
+
+
+
+  ############## PullRequestBuildTrigger ##############
+  PullRequestBuildTrigger:
+    description: |
+      Models a trigger of a build via a pull request webhook callback.
+    allOf:
+    - $ref: '#/definitions/BuildTrigger'
+    - type: object
+      required:
+        - commitSha
+        - pullRequestId
+        - webhookId
+      properties:
+        commitSha:
+          type: string
+          description: The commitSha of a commmit selected.
+        commitUrl:
+          type: string
+          description: The commit url of a commmit selected.
+        compareUrl:
+          type: string
+          description: The compare url of a commmit selected.
+        pullRequestId:
+          type: string
+          description: The (VCS) id of the pull request.
+        webhookId:
+          type: string
+          description: |
+            The (VCS) id of the webhook that produced this pull request. REVISIT: do we need this?
+
+
+  ############## ManualBuildTrigger ##############
+  ManualBuildTrigger:
+    description: |
+      Models a manual trigger of a build by a user for a specific project.
+    allOf:
+    - $ref: '#/definitions/BuildTrigger'
+    - type: object
+      required:
+        - userId
+        - projectId
+        - commitRef
+      properties:
+        userId:
+          type: integer
+          format: int32
+          description: The (internal) id of the user who triggered the build.
+        projectId:
+          type: integer
+          format: int32
+          description: The (internal) id of the project the build was triggered for.
+        commitRef:
+          type: string
+          description: The commit reference to build from (e.g. a Git commitSha, or a SVN revision).
+
+
+
+
+  ############## artifact ##############
+  Artifact:
+    type: object
+    description: Models an artifact.
+    required:
+      - artifactId
+      - message
+      - artifactType
+      - created
+    properties:
+      artifactId:
+        type: integer
+        format: int32
+        description: The artifact id.
+      message:
+        type: string
+        description: The artifiact message.
+      created:
+        type: string
+        description: Artifact creation timestamp.
+        format: date-time
+      artifactType:
+        type: string
+        description: The type of artifact, e.g. `BUILD_LOG`.
+        enum: ["BUILD_LOG", "WORKSPACE", "TEST_LOG", "DEPLOY_LOG"]
+      links:
+        type: array
+        description: An array of links to artifacts. ## This seems a bit dodgy
+        items:
+          $ref: '#/definitions/ArtifactLinks'
+
+
+
+
+  ############## ArtifactLinks ##############
+  ### REVISIT (neilotoole): NOt entirely sure what this does ###
+  ArtifactLinks:
+    type: object
+    description: Artifact links.
+    required:
+      - selfUrl
+      - editUrl
+    properties:
+      selfUrl:
+        type: string
+        description: The artifact self link.
+      editUrl:
+        type: string
+        description: The artifact edit link.
+
+
+
+
+
+  ############## NotificationTarget ##############
+  NotificationTarget:
+    type: object
+    description: Models a notification target (e.g. a HipChat room or Slack channel) for a specific project.
+    required:
+      - targetId
+      - projectId
+      - targetType
+      - url
+      - targetCredentialId
+    properties:
+      targetId:
+        type: integer
+        format: int32
+        description: The (internal) id of this instance.
+      projectId:
+        type: integer
+        format: int32
+        description: The associated project id.
+      targetType:
+        type: string
+        description: |
+          The notification target type, e.g. `SLACK`, `HIPCHAT`, etc.
+        enum: ['SLACK', 'HIPCHAT', 'FLOWDOCK', 'HTTP_POST', 'GITHUB_PULL_REQUEST']
+      url:
+        type: string
+        description: The target endpoint URL.
+      targetCredentialId:
+        type: integer
+        format: int32
+        description: The (internal) id of the credential used to access this target.
+
+
+
+
+  ############## Project ##############
+  Project:
+    type: object
+    description: |
+      Models an individual project.
+    required:
+      - projectId
+      - projectName
+      - repoId
+      - repoCredentialId
+      - created
+    properties:
+      projectId:
+        type: integer
+        format: int32
+        description: The (internal) id of this instance.
+      projectName:
+        type: string
+        description: The user-provided label for the project.
+      repoId:
+        type: integer
+        format: int32
+        description: The (internal) id of the repo associated with the project
+      repoCredentialId:
+        type: integer
+        format: int32
+        description: The (internal) id of the credential object that the project uses to access the repo.
+      created:
+        type: string
+        format: date-time
+        description: Timestamp of instance creation.
+
+
+
+
+
+
+  ############## Repo ##############
+  Repo:
+    type: object
+    description: Models a reference to a VCS repository instance, such as a GitHub repo, and references a specific branch.
+    required:
+      - repoId
+      - vcsId
+      - repoName
+
+    properties:
+      repoId:
+        type: integer
+        format: int32
+        description: The (internal) id of this repo.
+      vcsId:
+        type: integer
+        format: int32
+        description: The (internal) id of the VCS instance that this repo belongs to.
+      repoName:
+        type: string
+        description: |
+          The name of the repo, e.g. `hpcloud/codeengine`.
+      repoOwner:
+        type: string
+        description: |
+          The owner of the repo (as determined by the repo itself), e.g. `neilotoole`. REVISIT: what do we need this for?
+
+
+  ############## GitHubRepo ##############
+  GitHubRepo:
+    description: Models a reference to a GitHub repo..
+    allOf:
+    - $ref: '#/definitions/Repo'
+    - type: object
+      required:
+        - cloneUrl
+        - sshUrl
+        - httpUrl
+        - webHookId
+        - webHookUrl
+        - webHookCredentialId
+      properties:
+        githubRepoId:
+          type: string
+          description: For GitHub repos, the unique GitHub identifier.
+        cloneUrl:
+          type: string
+          description: The HTTPS URL used to clone the repo.
+        sshUrl:
+          type: string
+          description: The SSH URL used to clone the repo.
+        httpUrl:
+          type: string
+          description: The repo home page.
+        webHookId:
+          type: string
+          description: On GitHub, this is the unique id of the webhook for this repo that calls back to HelionCE.
+        webHookUrl:
+          type: string
+          description: On GitHub, this is the unique id of the webhook for this repo that calls back to HelionCE.
+        webHookCredentialId:
+          type: integer
+          format: int32
+          description: The webhook token.
+        latestCommitSha:
+          type: string
+          description: |
+            The most recent commit SHA. REVISIT: should we be storing this?
+
+  ############## Environment ##############
+  Environment:
+    type: object
+    discriminator: environmentType
+    description: Models a deployment target/environment (e.g. a CloudFoundry instance) that a project can be deployed to.
+    required:
+      - environmentId
+      - environmentType
+      - url
+      - label
+      - ownerUserId
+      - credentialId
+    properties:
+      environmentId:
+        type: integer
+        format: int32
+        description: The internal id of this environment instance.
+      environmentType:
+        type: string
+        description: The type of target environment.
+        enum: ['CloudFoundryEnvironment', 'AWSEnvironment']
+      url:
+        type: string
+        description: The URL endpoint that the target is accessible at.
+      label:
+        type: string
+        description: The user-friendly label for this instance, e.g. "Neil's first CloudFoundry environment"
+      description:
+        type: string
+        description: An optional description for the environment.
+      ownerUserId:
+        type: integer
+        format: int32
+        description: The user id of the owner/creator of this environment.
+      credentialId:
+        type: integer
+        format: int32
+        description: The user id of the owner/creator of this environment.
+
+
+  ############## CloudFoundryEnvironment ##############
+  CloudFoundryEnvironment:
+    description: Models a CloudFoundry deployment target/environment instance.
+    allOf:
+    - $ref: '#/definitions/Environment'
+    - type: object
+      required:
+        - organization
+        - space
+      properties:
+        organization:
+          type: string
+          description: The organization under which a project will be deployed to this target.
+        space:
+          type: string
+          description: The space within an organization that a project will be deployed under on this target.
+
+  ############## AWSEnvironment ##############
+  AWSEnvironment:
+    description: Models an AWS deployment target/environment instance.
+    allOf:
+    - $ref: '#/definitions/Environment'
+    - type: object
+      required:
+        - awsEnvironmentName
+      properties:
+        awsEnvironmentName:
+          type: string
+          description: The AWS environment name.
+
+
+  ############## Deployment ##############
+  Deployment:
+    type: object
+    description: Models a deployment.
+    required:
+      - deploymentId
+      - projectId
+      - buildId
+      - created
+    properties:
+      deploymentId:
+        type: integer
+        format: int32
+        description: The internal deployment id.
+      buildId:
+        type: integer
+        format: int32
+        description: The build id to be deployed.
+      projectId:
+        type: integer
+        format: int32
+        description: The project id to be deployed.
+      environmentId:
+        type: integer
+        format: int32
+        description: The (internal) id of the environment hosting the deployment.
+      applicationId:
+        type: string
+        description: The application identifier (on the target environment).
+      created:
+        type: string
+        description: Date time when deployment is created.
+      browseUrl:
+        type: string
+        description: The url where the build is deployed.
+
+
+  ############## Credential ##############
+  Credential:
+    type: object
+    description: Models a generic access credential.
+    required:
+      - credentialId
+      - credentialType
+      - credentialValue
+      - created
+    properties:
+      credentialId:
+        type: integer
+        format: int32
+        description: The unique ID of this credential.
+      credentialType:
+        type: string
+        description: The type of credential.
+        enum: ['USERNAME_PASSWORD', 'OAUTH2_TOKEN', 'AWS_ACCESS_KEY', 'PKI']
+      created:
+        type: string
+        description: The creation timestamp.
+        format: date-time
+      credentialKey:
+        type: string
+        description: The credential key, e.g. the username, or AWS Access Key ID, etc. May be null.
+      credentialValue:
+        type: string
+        description: The credential value, e.g. the password, or AWS Secret Key.
+      label:
+        type: string
+        description: An optional label for the credential, e.g. "Alice's GitHub OAuth token".
+
+
+
+  ############## User ##############
+  User:
+    type: object
+    description: Models a User instance.
+    required:
+      - userId
+      - email
+      - fullName
+      - created
+    properties:
+      userId:
+        type: integer
+        format: int32
+        description: The internal unique id of this User instance..
+      email:
+        type: string
+        description: The user's email.
+      fullName:
+        type: string
+        description: |
+          The user's full name, e.g. "Alice McAlister"
+      created:
+        type: string
+        format: date-time
+        description: The user creation timestamp.
+
+
+  ############## ProjectMember ##############
+  ProjectMember:
+    description: |
+      A member (user) of a project. Inherits from User.
+    allOf:
+    - $ref: '#/definitions/User'
+    - type: object
+      required:
+        - projectId
+        - isOwner
+      properties:
+        projectId:
+          type: integer
+          format: int32
+          description: The id of the project that the user is a member of.
+        isOwner:
+          type: boolean
+          description: |
+            `TRUE` if the member is an owner of the project, `FALSE` otherwise.
+
+
+  ############## VCS ##############
+  Vcs:
+    type: object
+    description: |
+      Models a reference to a Version Control System instance, e.g. GitHub.com, or a GitHub Enterprise instance, or a SVN instance.
+    required:
+      - vcsId
+      - vcsType
+      - label
+      - apiUrl
+    properties:
+      vcsId:
+        type: integer
+        format: int32
+        description: The internal unique id of this VCS instance.
+      vcsType:
+        type: string
+        description: The VCS type.
+        enum: ['GITHUB', 'GITHUB_ENTERPRISE', 'BITBUCKET', 'SVN']
+      label:
+        type: string
+        description: The user-friendly label for this VCS instance. Must be unique.
+      apiUrl:
+        type: string
+        description: The URL for API operations on this VCS instance.
+      browseUrl:
+        type: string
+        description: The browser URL for this VCS instance.
+
+  ############## ContainerRegistry ##############
+  ContainerRegistry:
+    type: object
+    description: |
+      Models a reference to container registry, e.g. DockerHub.
+    required:
+      - registryId
+      - containerType
+      - url
+      - label
+      - credentialId # do we need this exposed?
+    properties:
+      registryId:
+        type: integer
+        format: int32
+        description: The internal unique id of this instance.
+      containerType:
+        type: string
+        description: The container technology type.
+        enum: ['DOCKER', 'ROCKET', 'DRAWBRIDGE', 'LXD']
+      label:
+        type: string
+        description: The user-friendly label for this VCS instance. Must be unique.
+      url:
+        type: string
+        description: The URL for API operations on this instance.
+      credentialId:
+        type: integer
+        format: int32
+        description: |
+          The id of the credentials used to access this registry. REVISIT: do we need to expose this?
+
+
+  ContainerImage:
+    type: object
+    description: |
+      Models a reference to a container image, e.g. a Docker image.
+    required:
+      - imageId
+      - containerType
+      - registryId
+      - repo
+      - repoTag
+      - label
+    properties:
+      imageId:
+        type: integer
+        format: int32
+        description: The (internal) unique id of this instance.
+      containerType:
+        type: string
+        description: The container technology type.
+        enum: ['DOCKER', 'ROCKET', 'DRAWBRIDGE', 'LXD']
+      registryId:
+        type: integer
+        format: int32
+        description: The internal unique id of the registry instance where this container is hosted.
+      repo:
+        type: string
+        description: The name of the image's repo in the container registry.
+      repoTag:
+        type: string
+        description: The image's tag in the container registry.
+      label:
+        type: string
+        description: The user-friendly label for this instance. Must be unique.
+
+  BuildContainer:
+    type: object
+    description: |
+      Models a reference to a build container. That is, a container image used
+      for building a project of a specific type (e.g. Java, PHP, etc).
+    required:
+      - imageId
+      - containerType
+      - registryId
+      - repo
+      - repoTag
+      - label
+    properties:
+      imageId:
+        type: integer
+        format: int32
+        description: The (internal) unique id of this instance.
+      containerType:
+        type: string
+        description: The container technology type.
+        enum: ['DOCKER', 'ROCKET', 'DRAWBRIDGE', 'LXD']
+      registryId:
+        type: integer
+        format: int32
+        description: The (internal) unique id of the registry instance where this container is hosted.
+      repo:
+        type: string
+        description: The name of the image's repo in the container registry.
+      repoTag:
+        type: string
+        description: The image's repo tag in the container registry.
+      label:
+        type: string
+        description: The user-friendly label for this instance. Must be unique.
+
+
+
+  ############## PostDeployAction ##############
+  PostDeployAction:
+    type: object
+    description: Models a postDeployAction, (eg. stormrunner load test).
+    required:
+      - actionId
+      - actionName
+      - actionType
+      - metadata
+      - created
+    properties:
+      actionId:
+        type: integer
+        format: int32
+        description: The internal id of this post deployment action instance.
+      actionName:
+        type: string
+        description: The name of the post deployment action
+      actionType:
+        type: string
+        description: The type of the post deployment action.
+        enum: ["STORMRUNNER"]
+      metadata:
+        $ref: '#/definitions/StormRunnerMetadata'
+      created:
+        type: string
+        description: Date and time when the post deployment action is created.
+
+
+
+  ############## StormRunnerMetadata ##############
+  StormRunnerMetadata:
+    type: object
+    description: Models a postdeploymentaction, (eg. stormrunner load test).
+    required:
+      - tenantId
+      - actionType
+      - testId
+      - stormRunnerCredentialId
+    properties:
+      username:
+        type: string
+        description: The user name to login in inorder to create post deployment action.(eg. user name in stomrunner credentials)
+      password:
+        type: string
+        description: The password.(eg. password in stomrunner credentials)
+      tenantId:
+        type: string
+        description: The tenantid id in storm runner.
+      actionType:
+        type: string
+        description: The type of the post deployment action.
+        enum: ["STORMRUNNER"]
+      testId:
+        type: integer
+        format: int32
+        description: The test id we want to run as post deployment action in storm runner.
+      stormRunnerCredentialId:
+        type: integer
+        format: int32
+        description: The credentials used to access StormRunner.
+
+
+  ############## StormRunnerRequest ##############
+  StormRunnerRequest:
+    type: object
+    description: Models a postdeploymentaction, (eg. stormrunner load test).
+    required:
+      - metadata
+      - actionType
+    properties:
+      metadata:
+        $ref: '#/definitions/StormRunnerMetadata'
+      actionType:
+        type: string
+        description: The type of the post deployment action.
+        enum: ["STORMRUNNER"]
+
+
+  ############## StormRunnerTest ##############
+  StormRunnerTest:
+    type: object
+    description: Models a stormrunner test.
+    required:
+      - testId
+      - testName
+    properties:
+      testId:
+        type: integer
+        format: int32
+        description: The id of StormRunner load test.
+      testName:
+        type: string
+        description: The name of strom runner load test.
+
+
+
+  ############## ErrorResponse ##############
+  ErrorResponse:
+    type: object
+    description: |
+      A standard error object returned by all API calls.
+    required:
+      - apiVersion
+      - status
+    properties:
+      apiVersion:
+        type: string
+        description: The API version, e.g. `v1`.
+      status:
+        type: string
+        description: The HTTP status code.
+      message:
+        type: string
+        description: The message associated with the error.
+      log:
+        type: string
+        description: Any additional error information, such as log entries, stack trace, etc. Likely to be turned off in production environments.
+
+
+
+  ############## Branch ##############
+  Branch:
+    type: object
+    description: |
+      A branch of a repo.
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        description: The branch name, e.g. `master`.
+      allCommitsLoaded:
+        type: boolean
+        description: |
+          This is `true` if all commits for this branch have been loaded. TBD: This looks like some UI-related funkiness.
+      commitPagesLoaded:
+        type: integer
+        format: int32
+        description: The number of commit pages loaded (for the purposes of paging through the set of commits).
+      commit:
+        $ref: '#/definitions/Commit'
+      commits:
+        type: array
+        description: An array of `commit` objects, which can be empty.
+        items:
+          $ref: '#/definitions/Commit'
+
+
+  ############## Commit ##############
+  Commit:
+    type: object
+    description: |
+      A commit to a repo.
+    required:
+      - sha
+      - url
+    properties:
+      sha:
+        type: string
+        description: |
+          The SHA of the commit, e.g. `5d26f03424872b5235ea1a1e1a6262e61e4f430c`.
+      url:
+        type: string
+        description: |
+          The URL of the commit, e.g. `https://api.github.com/repos/neilotoole/helion-hello-node/commits/5d26f03424872b5235ea1a1e1a6262e61e4f430c`.
+
+
