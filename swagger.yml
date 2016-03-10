@@ -25,6 +25,65 @@ paths:
 
 
 
+  ######################### /auth/credentials #########################
+  '/auth/credentials':
+
+    post:
+      tags:
+        - Security
+      summary: Store auth Credential.
+      description: |
+        Add security credential to the authstore. After this operation, the Credential is still
+        unlinked to any entity.
+      operationId: storeCredential
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: credential
+          in: body
+          description: The Credential to store.
+          schema:
+            $ref: '#/definitions/Credential'
+          required: true
+      responses:
+        201:
+          description: Credential added.
+          schema:
+            $ref: '#/definitions/Credential'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+
+  ######################### /auth/credentials/{credentialId} #########################
+  '/auth/credentials/{credentialId}':
+    delete:
+      tags:
+        - Security
+      summary: Remove the specified credential from the authstore.
+      operationId: forgetCredential
+      consumes:
+        - application/json # This operation doesn't actually consume anything, this should be removed.
+      produces:
+        - application/json
+      parameters:
+        - name: credentialId
+          in: path
+          description: The (internal) Credential id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+          204:
+            description: Credential successfully forgotten.
+          404:
+            description: Item with specified id not found.
+
+
   ######################### /vcs #########################
   '/vcs':
 
@@ -129,8 +188,28 @@ paths:
 
 
 
-  ######################### /container/registry #########################
-  '/container/registry':
+  ######################### /containers/types #########################
+  '/containers/types':
+
+    get:
+      tags:
+        - Container
+      summary: |
+        Enumeration of Container types, e.g. `DOCKER`, `ROCKET`, etc.
+      operationId: getContainerTypes
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Array of Container types.
+          schema:
+            type: array
+            items:
+              type: string
+
+
+  ######################### /container/registries #########################
+  '/containers/registries':
 
     post:
       tags:
@@ -144,9 +223,9 @@ paths:
       produces:
         - application/json
       parameters:
-        - name: vcs
+        - name: registry
           in: body
-          description: The item to register.
+          description: The ContainerRegistry to register.
           schema:
             $ref: '#/definitions/ContainerRegistry'
           required: true
@@ -182,30 +261,13 @@ paths:
             $ref: '#/definitions/ErrorResponse'
 
 
-  ######################### /container/types #########################
-  '/container/types':
 
-    get:
-      tags:
-        - Container
-      summary: |
-        Enumeration of Container types, e.g. `DOCKER`, `ROCKET`, etc.
-      operationId: getContainerTypes
-      produces:
-        - application/json
-      responses:
-        200:
-          description: Array of Container types.
-          schema:
-            type: array
-            items:
-              type: string
 
 
 
 
   ######################### /container/registry/{registryId} #########################
-  '/container/registry/{registryId}':
+  '/containers/registries/{registryId}':
     delete:
       tags:
         - Container
@@ -245,6 +307,206 @@ paths:
           description: The ContainerRegistry instance.
           schema:
             $ref: '#/definitions/ContainerRegistry'
+        404:
+          description: Item with specified id not found.
+
+    # FIXME: need to add PUT/PATCH
+
+
+  ######################### /containers/images #########################
+  '/containers/images':
+
+    post:
+      tags:
+        - Container
+      summary: Register a ContainerImage instance.
+      description: |
+        Register a ContainerImage instance, such as a Docker image.
+      operationId: registerContainerImage
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: registry
+          in: body
+          description: The ContainerImage to register.
+          schema:
+            $ref: '#/definitions/ContainerImage'
+          required: true
+      responses:
+        201:
+          description: Item registered.
+          schema:
+            $ref: '#/definitions/ContainerImage'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    get:
+      tags:
+        - Container
+      summary: List ContainerImage instances.
+      description: |
+        List the registered ContainerImage instances.
+      operationId: getContainerImages
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Array of registered ContainerImage instances.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ContainerImage'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  ######################### /containers/images/{imageId} #########################
+  '/containers/images/{imageId}':
+    delete:
+      tags:
+        - Container
+      summary: Unregister the specified ContainerImage.
+      operationId: unregisterContainerImage
+      produces:
+        - application/json
+      parameters:
+        - name: imageId
+          in: path
+          description: The (internal) ContainerImage id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+          204:
+            description: Item unregistered.
+          404:
+            description: Item with specified id not found.
+
+    get:
+      tags:
+        - Container
+      summary: Get the ContainerImage specified in the request.
+      operationId: getContainerImage
+      produces:
+        - application/json
+      parameters:
+        - name: imageId
+          in: path
+          description: The (internal) item id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: The ContainerImage instance.
+          schema:
+            $ref: '#/definitions/ContainerImage'
+        404:
+          description: Item with specified id not found.
+
+    # FIXME: need to add PUT/PATCH
+
+
+######################### /containers/build_containers #########################
+  '/containers/build_containers':
+
+    post:
+      tags:
+        - Container
+      summary: Register a BuildContainer instance.
+      description: |
+        Register a BuildContainer instance, such as a BuildContainer for Java, or nodejs, or PHP, etc.
+      operationId: registerBuildContainer
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: build_container
+          in: body
+          description: The BuildContainer to register.
+          schema:
+            $ref: '#/definitions/BuildContainer'
+          required: true
+      responses:
+        201:
+          description: Item registered.
+          schema:
+            $ref: '#/definitions/BuildContainer'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    get:
+      tags:
+        - Container
+      summary: List BuildContainer instances.
+      description: |
+        List the registered BuildContainer instances.
+      operationId: getBuildContainers
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Array of registered BuildContainer instances.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/BuildContainer'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  ######################### /containers/build_containers/{containerId} #########################
+  '/containers/build_containers/{container_id}':
+    delete:
+      tags:
+        - Container
+      summary: Unregister the specified BuildContainer.
+      operationId: unregister_build_container
+      produces:
+        - application/json
+      parameters:
+        - name: container_id
+          in: path
+          description: The (internal) BuildContainer id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+          204:
+            description: Item unregistered.
+          404:
+            description: Item with specified id not found.
+
+    get:
+      tags:
+        - Container
+      summary: Get the BuildContainer specified in the request.
+      operationId: get_build_container
+      produces:
+        - application/json
+      parameters:
+        - name: container_id
+          in: path
+          description: The (internal) item id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: The BuildContainer instance.
+          schema:
+            $ref: '#/definitions/BuildContainer'
         404:
           description: Item with specified id not found.
 
@@ -1745,10 +2007,6 @@ definitions:
 
 
 
-
-
-
-
   ############## Build ##############
   Build:
     type: object
@@ -1757,10 +2015,10 @@ definitions:
     required:
       - buildId
       - projectId
+      - buildTrigger
       - result
       - resultMessage
       - created
-      - buildTrigger
     properties:
       buildId:
         type: integer
@@ -1770,6 +2028,8 @@ definitions:
         type: integer
         format: int32
         description: The (internal) id of the project the build is associated with.
+      buildTrigger:
+        $ref: '#/definitions/BuildTrigger' # REVISIT: convert to just an id?
       result:
         type: string
         description: Result of the build process.
@@ -1777,8 +2037,6 @@ definitions:
       resultMessage:
         type: string
         description: Message associated with the build result.
-      buildTrigger:
-        $ref: '#/definitions/BuildTrigger'
       created:
         type: string
         description: Build creation timestamp.
@@ -1797,8 +2055,8 @@ definitions:
     required:
       - triggerId
       - triggerType
-      - message
       - author
+      - message
       - created
     properties:
       triggerId:
@@ -1809,15 +2067,15 @@ definitions:
         type: string
         description: The type of build trigger. (e.g. manual, or PR, etc.)
         enum: ["PullRequestBuildTrigger", "ManaulBuildTrigger"]
-      message:
-        type: string
-        description: The message associated with the build trigger event.
       author:
         type: string
         description: The author of a commmit selected.
       avatarUrl:
         type: string
         description: The compare url of a commmit selected.
+      message:
+        type: string
+        description: The message associated with the build trigger event.
       created:
         type: string
         format: date-time
@@ -1833,10 +2091,17 @@ definitions:
     - $ref: '#/definitions/BuildTrigger'
     - type: object
       required:
-        - commitSha
         - pullRequestId
         - webhookId
+        - commitSha
       properties:
+        pullRequestId:
+          type: string
+          description: The (VCS) id of the pull request.
+        webhookId:
+          type: string
+          description: |
+            The (VCS) id of the webhook that produced this pull request. REVISIT: do we need this?
         commitSha:
           type: string
           description: The commitSha of a commmit selected.
@@ -1846,13 +2111,7 @@ definitions:
         compareUrl:
           type: string
           description: The compare url of a commmit selected.
-        pullRequestId:
-          type: string
-          description: The (VCS) id of the pull request.
-        webhookId:
-          type: string
-          description: |
-            The (VCS) id of the webhook that produced this pull request. REVISIT: do we need this?
+
 
 
   ############## ManualBuildTrigger ##############
@@ -1935,7 +2194,6 @@ definitions:
 
 
 
-
   ############## NotificationTarget ##############
   NotificationTarget:
     type: object
@@ -1944,7 +2202,7 @@ definitions:
       - targetId
       - projectId
       - targetType
-      - url
+      - apiUrl
       - targetCredentialId
     properties:
       targetId:
@@ -1960,7 +2218,7 @@ definitions:
         description: |
           The notification target type, e.g. `SLACK`, `HIPCHAT`, etc.
         enum: ['SLACK', 'HIPCHAT', 'FLOWDOCK', 'HTTP_POST', 'GITHUB_PULL_REQUEST']
-      url:
+      apiUrl:
         type: string
         description: The target endpoint URL.
       targetCredentialId:
@@ -2006,8 +2264,6 @@ definitions:
 
 
 
-
-
   ############## Repo ##############
   Repo:
     type: object
@@ -2016,7 +2272,6 @@ definitions:
       - repoId
       - vcsId
       - repoName
-
     properties:
       repoId:
         type: integer
@@ -2043,6 +2298,7 @@ definitions:
     - $ref: '#/definitions/Repo'
     - type: object
       required:
+        - gitHubRepoId
         - cloneUrl
         - sshUrl
         - httpUrl
@@ -2050,7 +2306,7 @@ definitions:
         - webHookUrl
         - webHookCredentialId
       properties:
-        githubRepoId:
+        gitHubRepoId:
           type: string
           description: For GitHub repos, the unique GitHub identifier.
         cloneUrl:
@@ -2085,10 +2341,10 @@ definitions:
     required:
       - environmentId
       - environmentType
-      - url
-      - label
+      - apiUrl
       - ownerUserId
       - credentialId
+      - label
     properties:
       environmentId:
         type: integer
@@ -2098,15 +2354,9 @@ definitions:
         type: string
         description: The type of target environment.
         enum: ['CloudFoundryEnvironment', 'AWSEnvironment']
-      url:
+      apiUrl:
         type: string
         description: The URL endpoint that the target is accessible at.
-      label:
-        type: string
-        description: The user-friendly label for this instance, e.g. "Neil's first CloudFoundry environment"
-      description:
-        type: string
-        description: An optional description for the environment.
       ownerUserId:
         type: integer
         format: int32
@@ -2115,6 +2365,12 @@ definitions:
         type: integer
         format: int32
         description: The user id of the owner/creator of this environment.
+      label:
+        type: string
+        description: The user-friendly label for this instance, e.g. "Neil's first CloudFoundry environment"
+      description:
+        type: string
+        description: An optional description for the environment.
 
 
   ############## CloudFoundryEnvironment ##############
@@ -2162,14 +2418,14 @@ definitions:
         type: integer
         format: int32
         description: The internal deployment id.
-      buildId:
-        type: integer
-        format: int32
-        description: The build id to be deployed.
       projectId:
         type: integer
         format: int32
         description: The project id to be deployed.
+      buildId:
+        type: integer
+        format: int32
+        description: The build id to be deployed.
       environmentId:
         type: integer
         format: int32
@@ -2177,12 +2433,14 @@ definitions:
       applicationId:
         type: string
         description: The application identifier (on the target environment).
-      created:
-        type: string
-        description: Date time when deployment is created.
       browseUrl:
         type: string
         description: The url where the build is deployed.
+      created:
+        type: string
+        format: date-time
+        description: Deployment timestamp.
+
 
 
   ############## Credential ##############
@@ -2203,10 +2461,6 @@ definitions:
         type: string
         description: The type of credential.
         enum: ['USERNAME_PASSWORD', 'OAUTH2_TOKEN', 'AWS_ACCESS_KEY', 'PKI']
-      created:
-        type: string
-        description: The creation timestamp.
-        format: date-time
       credentialKey:
         type: string
         description: The credential key, e.g. the username, or AWS Access Key ID, etc. May be null.
@@ -2216,6 +2470,10 @@ definitions:
       label:
         type: string
         description: An optional label for the credential, e.g. "Alice's GitHub OAuth token".
+      created:
+        type: string
+        description: The creation timestamp.
+        format: date-time
 
 
 
@@ -2275,8 +2533,8 @@ definitions:
     required:
       - vcsId
       - vcsType
-      - label
       - apiUrl
+      - label
     properties:
       vcsId:
         type: integer
@@ -2286,15 +2544,15 @@ definitions:
         type: string
         description: The VCS type.
         enum: ['GITHUB', 'GITHUB_ENTERPRISE', 'BITBUCKET', 'SVN']
-      label:
-        type: string
-        description: The user-friendly label for this VCS instance. Must be unique.
       apiUrl:
         type: string
         description: The URL for API operations on this VCS instance.
       browseUrl:
         type: string
         description: The browser URL for this VCS instance.
+      label:
+        type: string
+        description: The user-friendly label for this VCS instance. Must be unique.
 
   ############## ContainerRegistry ##############
   ContainerRegistry:
@@ -2304,9 +2562,9 @@ definitions:
     required:
       - registryId
       - containerType
-      - url
+      - apiUrl
+      - credentialId
       - label
-      - credentialId # do we need this exposed?
     properties:
       registryId:
         type: integer
@@ -2316,10 +2574,7 @@ definitions:
         type: string
         description: The container technology type.
         enum: ['DOCKER', 'ROCKET', 'DRAWBRIDGE', 'LXD']
-      label:
-        type: string
-        description: The user-friendly label for this VCS instance. Must be unique.
-      url:
+      apiUrl:
         type: string
         description: The URL for API operations on this instance.
       credentialId:
@@ -2327,7 +2582,9 @@ definitions:
         format: int32
         description: |
           The id of the credentials used to access this registry. REVISIT: do we need to expose this?
-
+      label:
+        type: string
+        description: The user-friendly label for this VCS instance. Must be unique.
 
   ContainerImage:
     type: object
@@ -2339,7 +2596,7 @@ definitions:
       - registryId
       - repo
       - repoTag
-      - label
+      - imageLabel
     properties:
       imageId:
         type: integer
@@ -2359,44 +2616,31 @@ definitions:
       repoTag:
         type: string
         description: The image's tag in the container registry.
-      label:
+      imageLabel:
         type: string
         description: The user-friendly label for this instance. Must be unique.
 
   BuildContainer:
-    type: object
     description: |
       Models a reference to a build container. That is, a container image used
       for building a project of a specific type (e.g. Java, PHP, etc).
+    type: object
     required:
+      - buildContainerId
       - imageId
-      - containerType
-      - registryId
-      - repo
-      - repoTag
-      - label
+      - buildContainerLabel
     properties:
+      buildContainerId:
+        type: integer
+        format: int32
+        description: The (internal) id of this instance.
       imageId:
         type: integer
         format: int32
-        description: The (internal) unique id of this instance.
-      containerType:
+        description: The (internal) id of the backing ContainerImage.
+      buildContainerLabel:
         type: string
-        description: The container technology type.
-        enum: ['DOCKER', 'ROCKET', 'DRAWBRIDGE', 'LXD']
-      registryId:
-        type: integer
-        format: int32
-        description: The (internal) unique id of the registry instance where this container is hosted.
-      repo:
-        type: string
-        description: The name of the image's repo in the container registry.
-      repoTag:
-        type: string
-        description: The image's repo tag in the container registry.
-      label:
-        type: string
-        description: The user-friendly label for this instance. Must be unique.
+        description: The user-friendly label for this BuildContainer instance. Must be unique.
 
 
 
@@ -2406,8 +2650,8 @@ definitions:
     description: Models a postDeployAction, (eg. stormrunner load test).
     required:
       - actionId
-      - actionName
       - actionType
+      - actionName
       - metadata
       - created
     properties:
@@ -2415,13 +2659,14 @@ definitions:
         type: integer
         format: int32
         description: The internal id of this post deployment action instance.
-      actionName:
-        type: string
-        description: The name of the post deployment action
       actionType:
         type: string
         description: The type of the post deployment action.
         enum: ["STORMRUNNER"]
+      actionName:
+        type: string
+        description: The name of the post deployment action
+
       metadata:
         $ref: '#/definitions/StormRunnerMetadata'
       created:
