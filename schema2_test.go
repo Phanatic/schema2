@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"time"
-	"github.com/hpcloud/hce-cli/api"
+	"github.com/hpcloud/hce-cli/hce"
 )
 
 
@@ -22,9 +22,9 @@ func main() {
 func all_test() {
 
 	// Do some user stuff
-	userApiClient := api.NewUserApi()
+	userApiClient := hce.NewUserApi()
 
-	user := api.User{nil, "neilotoole@apache.org", "Neil O'Toole", nil}
+	user := hce.User{nil, "neilotoole@apache.org", "Neil O'Toole", nil}
 	user, _ = userApiClient.CreateUser(user)
 	defer userApiClient.DeleteUser(user.UserId)
 	log.Println(user)
@@ -41,10 +41,10 @@ func all_test() {
 
 
 	// Do some VCS stuff
-	vcsApiClient := api.NewVcsApi()
+	vcsApiClient := hce.NewVcsApi()
 
 	// Unfortunately, the swagger-codegen Go generator does not currently produce enum types ("GITHUB")
-	vcs := api.Vcs{nil, "GITHUB", "https://api.github.com", "https://github.com","GitHub.com"}
+	vcs := hce.Vcs{nil, "GITHUB", "https://hce.github.com", "https://github.com","GitHub.com"}
 	vcs, _ = vcsApiClient.AddVcs(vcs)
 	defer vcsApiClient.RemoveVcs(vcs.VcsId)
 	log.Println(vcs)
@@ -58,7 +58,7 @@ func all_test() {
 
 	userVcsCredential, _ := generateCredential()
 	defer cleanupCredential(userVcsCredential)
-	vcsAccount := api.VcsAccount{nil, vcs.VcsId, user.UserId, "githubuserid12345", userVcsCredential}
+	vcsAccount := hce.VcsAccount{nil, vcs.VcsId, user.UserId, "githubuserid12345", userVcsCredential}
 
 	vcsAccount, _ = vcsApiClient.AddVcsAccount(vcsAccount)
 	defer vcsApiClient.RemoveVcsAccount(vcsAccount.VcsAccountId)
@@ -76,12 +76,12 @@ func all_test() {
 
 
 	// Do our container stuff
-	containerApiClient := api.NewContainerApi()
+	containerApiClient := hce.NewContainerApi()
 
 	containerRegistryCredential, _ := generateCredential()
 	defer cleanupCredential(containerRegistryCredential)
 
-	registry := api.ContainerRegistry{nil, "DOCKER", "DockerHub", "https://hub.docker.com", containerRegistryCredential.CredentialId}
+	registry := hce.ContainerRegistry{nil, "DOCKER", "DockerHub", "https://hub.docker.com", containerRegistryCredential.CredentialId}
 	registry, _ = containerApiClient.AddContainerRegistry(registry)
 	defer containerApiClient.RemoveContainerRegistry(registry.RegistryId)
 	log.Println(registry)
@@ -91,7 +91,7 @@ func all_test() {
 	log.Println(registries)
 
 
-	image := api.ContainerImage{nil, "DOCKER", registry.RegistryId, "java", "openjdk-8-jdk", "OpenJDK 8"}
+	image := hce.ContainerImage{nil, "DOCKER", registry.RegistryId, "java", "openjdk-8-jdk", "OpenJDK 8"}
 	image, _ = containerApiClient.AddContainerImage(image)
 	log.Println(image)
 	defer containerApiClient.RemoveContainerImage(image.ImageId)
@@ -102,7 +102,7 @@ func all_test() {
 	log.Println(images)
 
 
-	buildContainer := api.BuildContainer{image.ImageId, "Java"}
+	buildContainer := hce.BuildContainer{image.ImageId, "Java"}
 	buildContainer, _ = containerApiClient.AddBuildContainer(buildContainer)
 	defer containerApiClient.RemoveBuildContainer(buildContainer.BuildContainerId)
 
@@ -113,13 +113,13 @@ func all_test() {
 
 
 	// Set up a repo
-	repoApiClient := api.NewRepoApi()
+	repoApiClient := hce.NewRepoApi()
 
 	webhookCredential, _ := generateCredential()
 	defer cleanupCredential(webhookCredential)
 
 
-	ghRepo := api.GitHubRepo{nil, "12345", "neilotoole", "ssh:/xyz", "neilotoole/hce-cli", "https://localhost:3001/auth/github", "12345", 1, "6weadsfal32", "https://github.com/...", webhookCredential.CredentialId}
+	ghRepo := hce.GitHubRepo{nil, "12345", "neilotoole", "ssh:/xyz", "neilotoole/hce-cli", "https://localhost:3001/auth/github", "12345", 1, "6weadsfal32", "https://github.com/...", webhookCredential.CredentialId}
 
 	ghRepo, _ = repoApiClient.AddRepo(ghRepo)
 	defer repoApiClient.RemoveRepo(ghRepo.RepoId)
@@ -131,12 +131,12 @@ func all_test() {
 
 
 	// Create a project
-	projectApiClient := api.NewProjectApi()
+	projectApiClient := hce.NewProjectApi()
 
 	repoCredential, _ := generateCredential()
 	defer cleanupCredential(repoCredential)
 
-	project := api.Project{nil, "My First Project", ghRepo.RepoId, repoCredential.CredentialId, nil}
+	project := hce.Project{nil, "My First Project", ghRepo.RepoId, repoCredential.CredentialId, nil}
 	project, _ = projectApiClient.CreateProject(project)
 	log.Println(project)
 	defer projectApiClient.DeleteProject(project.ProjectId)
@@ -165,31 +165,31 @@ func all_test() {
 
 	// Environments!
 
-	environmentClientApi := api.NewEnvironmentApi()
+	environmentClientApi := hce.NewEnvironmentApi()
 
 	environmentCredential, _ := generateCredential()
 	defer cleanupCredential(environmentCredential)
 
 
-	environment := api.CloudFoundryEnvironment{nil, "https://cf1.example.com", "CloudFoundryEnvironment", "HPCloud", user.UserId, environmentCredential.CredentialId, "This is a really swell env", "My First Environment", "my space" }
+	environment := hce.CloudFoundryEnvironment{nil, "https://cf1.example.com", "CloudFoundryEnvironment", "HPCloud", user.UserId, environmentCredential.CredentialId, "This is a really swell env", "My First Environment", "my space" }
 
-	environment, _ = environmentClientApi.AddEnvironment(environment)
-	defer environmentClientApi.RemoveEnvironment(environment.EnvironmentId)
+	environment, _ = environmentClienthce.AddEnvironment(environment)
+	defer environmentClienthce.RemoveEnvironment(environment.EnvironmentId)
 	log.Println(environment)
 
-	environment, _ = environmentClientApi.GetEnvironment(environment.EnvironmentId)
+	environment, _ = environmentClienthce.GetEnvironment(environment.EnvironmentId)
 	log.Println(environment)
 
 	// Get all envs
-	environments, _ := environmentClientApi.GetEnvironments(nil)
+	environments, _ := environmentClienthce.GetEnvironments(nil)
 	log.Println(environments)
 
 	// Get envs that a user has access to
-	environments, _ = environmentClientApi.GetEnvironments(user.UserId)
+	environments, _ = environmentClienthce.GetEnvironments(user.UserId)
 	log.Println(environments)
 
 	environment.Label = "My updated environment"
-	environment, _ = environmentClientApi.UpdateEnvironment(environment.EnvironmentId, environment)
+	environment, _ = environmentClienthce.UpdateEnvironment(environment.EnvironmentId, environment)
 	log.Println(environment)
 
 
@@ -200,17 +200,17 @@ func all_test() {
 
 
 	// Let's get building!
-	buildApiClient := api.NewBuildApi()
+	buildApiClient := hce.NewBuildApi()
 
 	// Let's get the trigger so we can start a build
-	buildTrigger := api.ManualBuildTrigger{"753be09...02bdd767819cc8", "http://avatarurl", "neilotoole", nil, nil, "ManualBuildTrigger", "I started a build!", user.UserId, project.ProjectId}
+	buildTrigger := hce.ManualBuildTrigger{"753be09...02bdd767819cc8", "http://avatarurl", "neilotoole", nil, nil, "ManualBuildTrigger", "I started a build!", user.UserId, project.ProjectId}
 
 	buildTrigger, _ = buildApiClient.TriggerBuild(buildTrigger)
 	log.Println(buildTrigger)
 
 	buildTrigger, _ = buildApiClient.GetBuildTrigger(buildTrigger.TriggerId)
 
-	buildTrigger = api.PullRequestBuildTrigger{"http://compareUlr", "webhookId_1234", "http://avatarurl", "neilotoole", nil, "http://commitUrl",nil, "PullRequestBuildTrigger", "commitSha234234jasdf0", "Trigger from GitHub PR 666", "gh_pr_id_12345"}
+	buildTrigger = hce.PullRequestBuildTrigger{"http://compareUlr", "webhookId_1234", "http://avatarurl", "neilotoole", nil, "http://commitUrl",nil, "PullRequestBuildTrigger", "commitSha234234jasdf0", "Trigger from GitHub PR 666", "gh_pr_id_12345"}
 	buildTrigger = buildApiClient.TriggerBuild(buildTrigger)
 
 
@@ -227,15 +227,15 @@ func all_test() {
 
 
 	// Concourse calls back to here
-	buildEvent := api.BuildEvent{nil, build.BuildId, "concourse.test", "PENDING", "Some message", nil, nil, nil}
+	buildEvent := hce.BuildEvent{nil, build.BuildId, "concourse.test", "PENDING", "Some message", nil, nil, nil}
 	buildApiClient.BuildEventOccurred(buildEvent)
 
-	buildEvent = api.BuildEvent{nil, build.BuildId, "concourse.test", "SUCCESS", "Some message", nil, nil, nil}
+	buildEvent = hce.BuildEvent{nil, build.BuildId, "concourse.test", "SUCCESS", "Some message", nil, nil, nil}
 	buildApiClient.BuildEventOccurred(buildEvent)
 
-	deploymentApiClient := api.NewDeploymentApi()
+	deploymentApiClient := hce.NewDeploymentApi()
 	// Concourse calls back to here
-	deployment := api.Deployment{nil, project.ProjectId, build.BuildId, environment.EnvironmentId, "myapplicationid", "http://mydeployedapp.example.com", nil}
+	deployment := hce.Deployment{nil, project.ProjectId, build.BuildId, environment.EnvironmentId, "myapplicationid", "http://mydeployedapp.example.com", nil}
 	deployment, _ = deploymentApiClient.DeploymentOccurred(deployment)
 
 	// Back to client calling the api
@@ -257,15 +257,15 @@ func all_test() {
 
 // This function always generates a USERNAME_PASSWORD credential... in the real
 // world our test cases would be generating different types of credential.
-func generateCredential() (api.Credential, error){
-	securityApiClient := api.NewSecurityApi()
-	credential := api.Credential{nil, "USERNAME_PASSWORD", "myusername", "mypassword", "Neil's DockerHub username/password", nil}
+func generateCredential() (hce.Credential, error){
+	securityApiClient := hce.NewSecurityApi()
+	credential := hce.Credential{nil, "USERNAME_PASSWORD", "myusername", "mypassword", "Neil's DockerHub username/password", nil}
 	credential, err := securityApiClient.StoreCredential(credential)
 	log.Println(credential)
 	return credential, err
 }
 
-func cleanupCredential(credential api.Credential) {
-	securityApiClient := api.NewSecurityApi()
+func cleanupCredential(credential hce.Credential) {
+	securityApiClient := hce.NewSecurityApi()
 	securityApiClient.ForgetCredential(credential)
 }
