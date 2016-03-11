@@ -31,8 +31,6 @@ func all_test() {
 	user, _ = userApiClient.GetUser(user.UserId)
 	log.Println(user)
 
-	user, _ = userApiClient.GetUserByGithubId("123456")
-	log.Println(user)
 
 	user.Email = "neil.otoole@hpe.com"
 	user, _ = userApiClient.UpdateUser(user.UserId, user)
@@ -47,8 +45,8 @@ func all_test() {
 
 	// Unfortunately, the swagger-codegen Go generator does not currently produce enum types ("GITHUB")
 	vcs := api.Vcs{nil, "GITHUB", "https://api.github.com", "https://github.com","GitHub.com"}
-	vcs, _ = vcsApiClient.RegisterVcs(vcs)
-	defer vcsApiClient.UnregisterVcs(vcs.VcsId)
+	vcs, _ = vcsApiClient.AddVcs(vcs)
+	defer vcsApiClient.RemoveVcs(vcs.VcsId)
 	log.Println(vcs)
 
 	vcs, _ = vcsApiClient.GetVcs(vcs.VcsId)
@@ -140,15 +138,20 @@ func all_test() {
 
 	project := api.Project{nil, "My First Project", ghRepo.RepoId, repoCredential.CredentialId, nil}
 	project, _ = projectApiClient.CreateProject(project)
+	log.Println(project)
 	defer projectApiClient.DeleteProject(project.ProjectId)
 
 	project, _ = projectApiClient.GetProject(project.ProjectId)
+	log.Println(project)
 
 
+	// Get all projects
+	projects, _ := projectApiClient.GetProjects(nil, nil)
 
 	projectApiClient.AddMember(project.ProjectId, user.UserId)
 	defer projectApiClient.RemoveMember(project.ProjectId, user.UserId)
-	projects, _ := projectApiClient.GetProjectsForUser(user.UserId)
+	// Get projects that this user is a member of
+	projects, _ = projectApiClient.GetProjects(user.UserId, nil)
 	log.Println(projects)
 	members, _ := projectApiClient.GetProjectMembers(project.ProjectId)
 	log.Println(members)
@@ -158,6 +161,93 @@ func all_test() {
 	defer projectApiClient.RemoveOwner(project.ProjectId, user.UserId)
 	owners, _ := projectApiClient.GetProjectOwners(project.ProjectId)
 	log.Println(owners)
+
+
+	// Environments!
+
+	environmentClientApi := api.NewEnvironmentApi()
+
+	environmentCredential, _ := generateCredential()
+	defer cleanupCredential(environmentCredential)
+
+
+	environment := api.CloudFoundryEnvironment{nil, "https://cf1.example.com", "CloudFoundryEnvironment", "HPCloud", user.UserId, environmentCredential.CredentialId, "This is a really swell env", "My First Environment", "my space" }
+
+	environment, _ = environmentClientApi.AddEnvironment(environment)
+	defer environmentClientApi.RemoveEnvironment(environment.EnvironmentId)
+	log.Println(environment)
+
+	environment, _ = environmentClientApi.GetEnvironment(environment.EnvironmentId)
+	log.Println(environment)
+
+	// Get all envs
+	environments, _ := environmentClientApi.GetEnvironments(nil)
+	log.Println(environments)
+
+	// Get envs that a user has access to
+	environments, _ = environmentClientApi.GetEnvironments(user.UserId)
+	log.Println(environments)
+
+	environment.Label = "My updated environment"
+	environment, _ = environmentClientApi.UpdateEnvironment(environment.EnvironmentId, environment)
+	log.Println(environment)
+
+
+	// FIXME: Need to decide the relationship between Project and Environments... is it 1:1, or 1:N ?
+	// if 1:1, then env is a field on Project
+	// if not, then need to map the two... but does that mean that every deployment of a Project
+	// will always be deployed to multiple targets?
+
+
+	// Let's get building!
+	buildApiClient := api.NewBuildApi()
+
+	// Let's get the trigger so we can start a build
+	buildTrigger := api.ManualBuildTrigger{"753be09...02bdd767819cc8", "http://avatarurl", "neilotoole", nil, nil, "ManualBuildTrigger", "I started a build!", user.UserId, project.ProjectId}
+
+	buildTrigger, _ = buildApiClient.TriggerBuild(buildTrigger)
+	log.Println(buildTrigger)
+
+	buildTrigger, _ = buildApiClient.GetBuildTrigger(buildTrigger.TriggerId)
+
+	buildTrigger = api.PullRequestBuildTrigger{"http://compareUlr", "webhookId_1234", "http://avatarurl", "neilotoole", nil, "http://commitUrl",nil, "PullRequestBuildTrigger", "commitSha234234jasdf0", "Trigger from GitHub PR 666", "gh_pr_id_12345"}
+	buildTrigger = buildApiClient.TriggerBuild(buildTrigger)
+
+
+
+
+
+	// Adding the build trigger will have kicked off a build
+	builds, _ := buildApiClient.GetBuilds(project.ProjectId)
+	log.Println(builds)
+
+	build, _ := buildApiClient.GetBuild(builds[0].BuildId)
+	defer buildApiClient.DeleteBuild(build.BuildId)
+	log.Println(build)
+
+
+	// Concourse calls back to here
+	buildEvent := api.BuildEvent{nil, build.BuildId, "concourse.test", "PENDING", "Some message", nil, nil, nil}
+	buildApiClient.BuildEventOccurred(buildEvent)
+
+	buildEvent = api.BuildEvent{nil, build.BuildId, "concourse.test", "SUCCESS", "Some message", nil, nil, nil}
+	buildApiClient.BuildEventOccurred(buildEvent)
+
+	deploymentApiClient := api.NewDeploymentApi()
+	// Concourse calls back to here
+	deployment := api.Deployment{nil, project.ProjectId, build.BuildId, environment.EnvironmentId, "myapplicationid", "http://mydeployedapp.example.com", nil}
+	deployment, _ = deploymentApiClient.DeploymentOccurred(deployment)
+
+	// Back to client calling the api
+	deployments, _ := deploymentApiClient.GetDeployments(project.ProjectId, nil)
+
+	// Or get by build
+	deployments, _ = deploymentApiClient.GetDeployments(nil, build.BuildId)
+	log.Println(deployments[0])
+
+
+	log.Println(build.Result) // should be SUCCESS
+
 
 }
 
@@ -178,4 +268,3 @@ func cleanupCredential(credential api.Credential) {
 	securityApiClient := api.NewSecurityApi()
 	securityApiClient.ForgetCredential(credential)
 }
-

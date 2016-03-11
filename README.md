@@ -11,6 +11,12 @@ Load the associated [code_engine.sql](code_engine.sql) file into MySQL, or view 
 
 * Post-deploy actions: No promises made about the accuracy of this section of the API or DB schema. Need to consult with team.
 
-* `user_vcs_credential`: this is a join table for a user's VCS credentials (e.g. a GitHub OAuth2 token). Do we (as CREST) actually need this, or is this sort of thing best managed by the client (web or CLI)?
-
 * `project_invite`: We should really be generating unique per-user invitations.
+
+* Environments: What is the story with ownership of environments?
+    * Do envs belong to a person (owner, or owners), or are they associated with a project.
+    * Can all project members edit/update/delete a project?
+    * Is there a N:M relationship between projects and envs?
+    * Or should envs be associated with a project only via a deployment instance?
+
+* For polymorphic objects, swagger-codegen doesn't generate the struct with fields in the swagger source order. Need to open a bug.

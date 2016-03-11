@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.5.44-log)
 # Database: codeengine
-# Generation Time: 2016-03-11 07:55:21 +0000
+# Generation Time: 2016-03-11 17:40:03 +0000
 # ************************************************************
 
 
@@ -156,6 +156,7 @@ CREATE TABLE `build_event` (
   `started` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `finished` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `event_message` longtext,
+  `data` longblob,
   PRIMARY KEY (`build_event_id`),
   UNIQUE KEY `build_event_id_uindex` (`build_event_id`),
   KEY `build_event_build_id_fk` (`build_id`),

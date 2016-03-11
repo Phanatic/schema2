@@ -1474,8 +1474,8 @@ paths:
     post:
       tags:
         - Build
-      summary: Add (insert) a BuildTrigger event.
-      operationId: add_build_trigger
+      summary: Trigger a build.
+      operationId: triggerBuild
       consumes:
         - application/json
       produces:
@@ -1532,8 +1532,8 @@ paths:
     post:
       tags:
         - Build
-      summary: Add (insert) a BuildEvent.
-      operationId: add_build_event
+      summary: Record a BuildEvent.
+      operationId: build_event_occurred
       consumes:
         - application/json
       produces:
@@ -1616,7 +1616,7 @@ paths:
     get:
       tags:
         - Deployment
-      summary: List deployments, optionally filtering by Project id.
+      summary: List deployments, optionally filtering by Project id or Build id.
       operationId: get_deployments
       consumes:
         - application/json
@@ -1629,9 +1629,15 @@ paths:
           required: false
           type: integer
           format: int32
+        - name: build_id
+          in: query
+          description: Build id.
+          required: false
+          type: integer
+          format: int32
       responses:
         200:
-          description: Array of deployments.
+          description: Array of Deployment objects.
           schema:
             type: array
             items:
@@ -1639,10 +1645,10 @@ paths:
     post:
       tags:
         - Deployment
-      summary: Add a deployment.
+      summary: Record a deployment.
       description: |
-        Add a deploymennt. FIXME: Does invoking this method REGISTER a deployment that has occurred, or does it initiate a deployment?
-      operationId: add_deployment
+        Record a deploymennt. FIXME: Does invoking this method REGISTER a deployment that has occurred, or does it initiate a deployment?
+      operationId: deployment_occurred
       consumes:
         - application/json
       produces:
@@ -1928,12 +1934,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - name: projectId
-          in: path
-          description: The project id.
-          required: true
-          type: integer
-          format: int32
         - name: stormRunnerRequest
           in: body
           description: The storm runner request JSON to post.
