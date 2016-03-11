@@ -243,11 +243,12 @@ func all_test() {
 
 	// Or get by build
 	deployments, _ = deploymentApiClient.GetDeployments(nil, build.BuildId)
-	log.Println(deployments[0])
-
+	log.Println("Deployment Browse URL:" + deployments[0].BrowseUrl)
 
 	log.Println(build.Result) // should be SUCCESS
 
+
+	// FIXME: need to add example usage for PostDeployActions, and Artifacts
 
 }
 

@@ -10,6 +10,8 @@ Load the associated [code_engine.sql](code_engine.sql) file into MySQL, or view 
 ## Notes & issues
 
 * Post-deploy actions: No promises made about the accuracy of this section of the API or DB schema. Need to consult with team.
+    * StormRunner stuff has not been addressed/generalized at all.
+* Artifacts is also up in the air... do we really need to be uploading artifacts via CREST? Similarly with downloads. Need to discuss.
 
 * `project_invite`: We should really be generating unique per-user invitations.
 
