@@ -90,10 +90,10 @@ paths:
     post:
       tags:
         - Vcs
-      summary: Register a VCS instance.
+      summary: Add a VCS instance.
       description: |
-        Register a Version Control System instance, such as GitHub, a GitHub Enterprise instance, a SVN instance, etc..
-      operationId: registerVcs
+        Add (register) a Version Control System instance, such as GitHub, a GitHub Enterprise instance, a SVN instance, etc..
+      operationId: addVcs
       consumes:
         - application/json
       produces:
@@ -101,13 +101,13 @@ paths:
       parameters:
         - name: vcs
           in: body
-          description: The VCS to register.
+          description: VCS to add.
           schema:
             $ref: '#/definitions/Vcs'
           required: true
       responses:
         201:
-          description: VCS registered.
+          description: Added VCS.
           schema:
             $ref: '#/definitions/Vcs'
         default:
@@ -143,8 +143,8 @@ paths:
     delete:
       tags:
         - Vcs
-      summary: Unregister the specified VCS.
-      operationId: unregisterVcs
+      summary: Remove (unregister) the specified VCS.
+      operationId: remove_vcs
       consumes:
         - application/json
       produces:
@@ -152,21 +152,21 @@ paths:
       parameters:
         - name: vcsId
           in: path
-          description: The (internal) VCS id.
+          description: The (HCE) VCS id.
           required: true
           type: integer
           format: int32
       responses:
           204:
-            description: VCS unregistered.
+            description: Removed VCS.
           404:
             description: Item with specified id not found.
 
     get:
       tags:
         - Vcs
-      summary: Get the VCS specified in the request.
-      operationId: getVcs
+      summary: Get the specified VCS.
+      operationId: get_vcs
       produces:
         - application/json
       parameters:
@@ -210,7 +210,7 @@ paths:
           required: true
       responses:
         201:
-          description: Registered VCS account.
+          description: Added VCS account.
           schema:
             $ref: '#/definitions/VcsAccount'
         default:
@@ -812,8 +812,9 @@ paths:
     get:
       tags:
         - Project
-      summary: Get the projects that the user is a member of.
-      operationId: get_projects_for_user
+      summary: List projects, optionally filtering.
+      description: Get the list of projects, optionally filtering by user membership, and/or environments that the project is associated with.
+      operationId: get_projects
       consumes:
         - application/json
       produces:
@@ -821,8 +822,14 @@ paths:
       parameters:
         - name: user_id
           in: query
-          description: The (internal) user id to get projects for.
-          required: true
+          description: Filter the list of projects by whether this user is a member of that project.
+          required: false
+          type: integer
+          format: int32
+        - name: environment_id
+          in: query
+          description: Filter the list of projects by whether the project has this environment as a target.
+          required: false
           type: integer
           format: int32
       responses:
@@ -1204,6 +1211,8 @@ paths:
             description: Successful response with a stream of artifacts.
 
 
+
+  ######################### /builds/{buildId} #########################
   '/builds/{buildId}':
 
     get:
@@ -1440,6 +1449,65 @@ paths:
             $ref: '#/definitions/Artifact'
 
 
+  '/builds/triggers':
+
+    post:
+      tags:
+        - Build
+      summary: Add (insert) a BuildTrigger event.
+      operationId: add_build_trigger
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: build_trigger
+          in: body
+          description: BuildTrigger event.
+          schema:
+            $ref: '#/definitions/BuildTrigger'
+          required: true
+
+      responses:
+        201:
+          description: Added BuildTrigger.
+          schema:
+            $ref: '#/definitions/BuildTrigger'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  '/builds/triggers/{trigger_id}':
+
+    get:
+      tags:
+        - Build
+      summary: Get the specified build trigger.
+      operationId: get_build_trigger
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: trigger_id
+          in: path
+          description: BuildTrigger id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: BuildTrigger object.
+          schema:
+            $ref: '#/definitions/BuildTrigger'
+        default:
+          description: Failed to get BuildTrigger.
+
+
+
+  ######################### /deployments/{deploymentId} #########################
   '/deployments/{deploymentId}':
     get:
       summary: Get a deployment with deployment id specified in the request.
@@ -2010,142 +2078,46 @@ paths:
           description: Failed to creates a new notification target.
 
 
-  '/targets/{targetId}':
-
-    get:
-      summary: Get the deployment environment/target specified by `targetId`.
-      description: |
-        Get the deployment environment/target specified in the request. If the
-        item is not found, return a `404/NOT_FOUND`.
-      operationId: getEnvironment
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      
-      parameters:
-        - name: targetId
-          in: path
-          description: The internal target id.
-          required: true
-          type: integer
-          format: int32
-      
-      responses:
-        
-        200:
-          description: Successful response with a target/environment object
-          
-          schema:
-            $ref: '#/definitions/Environment'
-        
-        404:
-          description: The specified target/environment is not found.
-
-    put:
-      summary: Update the deployment environment specified by `targetId`.
-      description: |
-        Update the specified deployment environment and return the updated environment.
-      operationId: updateEnvironment
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: targetId
-          in: path
-          description: The id of the environment.
-          required: true
-          type: integer
-          format: int32
-
-        - name: target
-          required: true
-          in: body
-          description: The target object.
-          schema:
-            $ref: '#/definitions/Environment'
-
-      
-      responses:
-        
-        200:
-          description: The updated target.
-          schema:
-            $ref: '#/definitions/Environment'
-        
-        default:
-          description: Failed to update a target.
-          schema:
-            $ref: '#/definitions/ErrorResponse'
 
 
-    delete:
-      summary: Delete the deployment environment/target specified by `targetId`.
-      description: |
-        Delete the deployment environment/target referenced in the request and return 204.
-        If the target is not found, returns `404`.
-      operationId: deleteEnvironment
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      
-      parameters:
-        - name: targetId
-          in: path
-          description: The environment id we want to delete.
-          required: true
-          type: integer
-          format: int32
-      
-      responses:
-        
-        500:
-          description: When environment with specified id is not found or there are projects using it.
-        
-        204:
-          description: Successfully deleted.
-
-
-  '/targets/{targetId}/projects':
-
-    get:
-      summary: Get the projects associated with the environment specified by `targetId`.
-      description: |
-        Get the set of projects associated with the deployment environment
-        specified in the request. If there are no matching projects, return a 200/OK
-        and an empty set.
-      operationId: getProjectsForEnvironment
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      
-      parameters:
-        - name: targetId
-          in: path
-          description: The internal target id.
-          required: true
-          type: integer
-          format: int32
-      
-      responses:
-        
-        200:
-          description: Successful response with a list of projects or empty list if there is no projects targeting the target/environment.
-          
-
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Project'
-
-        404:
-          description: No environment matching `targetId`.
-
-        default:
-          description: Unexpected error.
+#  '/targets/{targetId}/projects':
+#
+#    get:
+#      summary: Get the projects associated with the environment specified by `targetId`.
+#      description: |
+#        Get the set of projects associated with the deployment environment
+#        specified in the request. If there are no matching projects, return a 200/OK
+#        and an empty set.
+#      operationId: getProjectsForEnvironment
+#      consumes:
+#        - application/json
+#      produces:
+#        - application/json
+#
+#      parameters:
+#        - name: targetId
+#          in: path
+#          description: The internal target id.
+#          required: true
+#          type: integer
+#          format: int32
+#
+#      responses:
+#
+#        200:
+#          description: Successful response with a list of projects or empty list if there is no projects targeting the target/environment.
+#
+#
+#          schema:
+#            type: array
+#            items:
+#              $ref: '#/definitions/Project'
+#
+#        404:
+#          description: No environment matching `targetId`.
+#
+#        default:
+#          description: Unexpected error.
 
 
   
@@ -2323,10 +2295,12 @@ paths:
   '/environments':
 
     post:
-      summary: Register an environment.
+      tags:
+        - Environment
+      summary: Add an environment.
       description: |
-        Register a deployment environment (target), such as a CloudFoundry instance.
-      operationId: register_environment
+        Add (register) a deployment environment (target), such as a CloudFoundry instance.
+      operationId: add_environment
       consumes:
         - application/json
       produces:
@@ -2340,35 +2314,20 @@ paths:
           required: true
       responses:
         201:
-          description: Newly created enviroment object.
+          description: Added environment.
           schema:
             $ref: '#/definitions/Environment'
         default:
-          description: Failed to create the environment.
+          description: Failed to add the environment.
 
 
     get:
-      summary: List the registered environments.
+      tags:
+        - Environment
+      summary: List the registered environments, optionally filtering.
+      description: |
+        List the registered environments, optionally filtering by owner user_id.
       operationId: get_environments
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      responses:
-        200:
-          description: |
-            Array of `Environment` objects, which may be empty.
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Environment'
-        default:
-          description: Unknown error.
-
-
-    get:
-      summary: Get the environments owned by the specified user.
-      operationId: get_environments_for_user
       consumes:
         - application/json
       produces:
@@ -2377,7 +2336,7 @@ paths:
         - name: user_id
           in: query
           description: User id.
-          required: true
+          required: false
           type: integer
           format: int32
       responses:
@@ -2393,6 +2352,88 @@ paths:
 
 
 
+  ######################### /environments/{environment_id} #########################
+  '/environments/{environment_id}':
+
+    get:
+      tags:
+        - Environment
+      summary: Get the specified environment.
+      operationId: get_environment
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: environment_id
+          in: path
+          description: Environment id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: Environment object.
+          schema:
+            $ref: '#/definitions/Environment'
+        404:
+          description: Environment not found.
+
+    put:
+      tags:
+        - Environment
+      summary: Update the specified environment.
+      operationId: update_environment
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: environment_id
+          in: path
+          description: Environment id.
+          required: true
+          type: integer
+          format: int32
+        - name: environment
+          required: true
+          in: body
+          description: Environment object.
+          schema:
+            $ref: '#/definitions/Environment'
+      responses:
+        200:
+          description: Updated environment.
+          schema:
+            $ref: '#/definitions/Environment'
+
+        default:
+          description: Update failed.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+    delete:
+      tags:
+        - Environment
+      summary: Remove (unregister) the specified environment.
+      operationId: remove_environment
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: environment_id
+          in: path
+          description: Environment id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        204:
+          description: Environment removed.
+        default:
+          description: Failed to remove environment.
 
 
 
