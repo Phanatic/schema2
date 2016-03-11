@@ -67,7 +67,7 @@ paths:
       summary: Remove the specified credential from the authstore.
       operationId: forgetCredential
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
+        - application/json
       produces:
         - application/json
       parameters:
@@ -146,7 +146,7 @@ paths:
       summary: Unregister the specified VCS.
       operationId: unregisterVcs
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
+        - application/json
       produces:
         - application/json
       parameters:
@@ -186,6 +186,168 @@ paths:
 
     # FIXME: need to add PUT/PATCH
 
+
+  ######################### /vcs/account #########################
+  '/vcs/account':
+
+    post:
+      tags:
+        - Vcs
+      summary: Add a user VCS account.
+      description: |
+        Add (register) a user's account for a particular VCS instance.
+      operationId: add_vcs_account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: vcs_account
+          in: body
+          description: The VCS account.
+          schema:
+            $ref: '#/definitions/VcsAccount'
+          required: true
+      responses:
+        201:
+          description: Registered VCS account.
+          schema:
+            $ref: '#/definitions/VcsAccount'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    get:
+      tags:
+        - Vcs
+      summary: Find user VCS account(s)
+      description: Search for user VCS account(s) based on a combination of VCS id, HCE user id, and/or VCS user id (e.g. GitHub user id).
+      operationId: find_vcs_account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: vcs_id
+          in: query
+          description: VCS id.
+          type: integer
+          format: int32
+          required: false
+        - name: user_id
+          in: query
+          description: HCE user id.
+          type: integer
+          format: int32
+          required: false
+        - name: vcs_user_id
+          in: query
+          description: VCS user id (e.g. GitHub user id).
+          type: string
+          required: false
+      responses:
+        200:
+          description: Array of VCS accounts. May contain zero, one, or many VCS accounts.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/VcsAccount'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  ######################### /vcs/account/{vcs_account_id} #########################
+  '/vcs/account/{vcs_account_id}':
+
+
+    get:
+      tags:
+        - Vcs
+      summary: Get a user VCS account.
+      operationId: get_vcs_account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: vcs_account_id
+          in: path
+          description: VCS account id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: VCS account.
+          schema:
+            $ref: '#/definitions/VcsAccount'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+    put:
+      tags:
+        - Vcs
+      summary: Update a user VCS account.
+      operationId: update_vcs_account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: vcs_account_id
+          in: path
+          description: VCS account id.
+          required: true
+          type: integer
+          format: int32
+        - name: vcs_account
+          in: body
+          description: VCS account.
+          schema:
+            $ref: '#/definitions/VcsAccount'
+          required: true
+      responses:
+        201:
+          description: Updated VCS account.
+          schema:
+            $ref: '#/definitions/VcsAccount'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+    delete:
+      tags:
+        - Vcs
+      summary: Remove a user VCS account.
+      description: |
+        Remove (unregister) a user account for a particular VCS instance.
+      operationId: remove_vcs_account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: vcs_account_id
+          in: path
+          description: VCS account id.
+          type: integer
+          format: int32
+          required: true
+      responses:
+        204:
+          description: Removed VCS account.
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
 
 
   ######################### /containers/types #########################
@@ -955,7 +1117,7 @@ paths:
 
   ######################### /artifacts/{artifactId} #########################
   '/artifacts/{artifactId}':
-    # This is a HTTP operation
+
     delete:
       tags:
         - Artifact
@@ -965,10 +1127,10 @@ paths:
         If artifact with specified id not found, returns 404.
       operationId: deleteArtifact
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: artifactId
           in: path
@@ -976,12 +1138,12 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-          # Response code
+          
           404:
             description: Artifact with specified id is not found.
-          # Response code
+          
           204:
             description: Artifact succefully deleted.
 
@@ -994,10 +1156,10 @@ paths:
         If there is no artifact with given id, returns 404.
       operationId: getArtifact
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: artifactId
           in: path
@@ -1005,12 +1167,12 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Successful response an artifact.
-          # A schema describing the response object.
+          
           schema:
             $ref: '#/definitions/Artifact'
         404:
@@ -1024,10 +1186,10 @@ paths:
           Download the artifact specified in the request params with the artifact streamed in the response. On error returns 500.
         operationId: downloadArtifact
         consumes:
-          - application/json # This operation doesn't actually consume anything, this should be removed?
+          - application/json
         produces:
           - application/json
-        # This is array of GET operation parameters:
+        
         parameters:
           - name: artifactId
             in: path
@@ -1035,15 +1197,15 @@ paths:
             required: true
             type: integer
             format: int32
-        # Expected responses for this operation:
+        
         responses:
-          # Response code
+          
           200:
             description: Successful response with a stream of artifacts.
 
 
   '/builds/{buildId}':
-    # This is a HTTP operation
+
     get:
       summary: Gets the build specified by `buildId`
       description: |
@@ -1051,10 +1213,10 @@ paths:
         If build with specified id not found, returns 404.
       operationId: getBuild
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: buildId
           in: path
@@ -1063,12 +1225,12 @@ paths:
           type: integer
           format: int32put
 
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Build found.
-          # A schema describing your response object.
+          
           schema:
             $ref: '#/definitions/Build'
         404:
@@ -1090,7 +1252,7 @@ paths:
         - application/json
       produces:
         - application/json
-      # Returns :
+      
       parameters:
         - name: buildId
           in: path
@@ -1106,9 +1268,9 @@ paths:
             $ref: '#/definitions/Build'
           required: true
 
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Updates a build.
 
@@ -1121,10 +1283,10 @@ paths:
         If there are no artifacts, returns an empty list.
       operationId: getArtifactsForBuild
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: buildId
           in: path
@@ -1132,12 +1294,12 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Successful response with a listing of artifacts can be empty.
-          # A schema describing the response object.
+          
           schema:
             type: array
             items:
@@ -1150,10 +1312,10 @@ paths:
         If failed to create returns 500.
       operationId: createArtifact
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: buildId
           in: path
@@ -1169,12 +1331,12 @@ paths:
             $ref: '#/definitions/Artifact'
           required: true
 
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         201:
           description: Successful response with details of the newly created post deployment.
-          # A schema describing the response object.
+          
           schema:
             $ref: '#/definitions/Artifact'
 
@@ -1187,10 +1349,10 @@ paths:
         On error returns 500.
       operationId: downloadWorkspace
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: buildId
           in: path
@@ -1198,9 +1360,9 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Successful response with a stream of of workspace.
 
@@ -1213,10 +1375,10 @@ paths:
         If failed to upload log returns 500.
       operationId: uploadLog
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: buildId
           in: path
@@ -1234,12 +1396,12 @@ paths:
       #   in: body
       #   description: The log. # what is the schema for this?
       #   required: true
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Successful response with artifact object.
-          # A schema describing the response object.
+          
           schema:
             $ref: '#/definitions/Artifact'
 
@@ -1252,10 +1414,10 @@ paths:
         If failed to upload workspace returns 500.
       operationId: uploadWorkspace
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: buildId
           in: path
@@ -1268,12 +1430,12 @@ paths:
       #   in: body
       #   description: The log. # what is the schema for this?
       #   required: true
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Successful response with artifact object.
-          # A schema describing the response object.
+          
           schema:
             $ref: '#/definitions/Artifact'
 
@@ -1286,10 +1448,10 @@ paths:
         If there is no deployment, returns 404.
       operationId: getDeployment
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: deploymentId
           in: path
@@ -1297,12 +1459,12 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Successful response with a deployments.
-          # A schema describing the response object.
+          
           schema:
             $ref: '#/definitions/Deployment'
 
@@ -1313,10 +1475,10 @@ paths:
         If there is no deployment, returns 404.
       operationId: deleteDeployment
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: deploymentId
           in: path
@@ -1324,19 +1486,19 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-          # Response code
+          
           404:
             description: Deployment with specified id is not found.
-          # Response code
+          
           204:
             description: Deployment Succefully deleted.
 
 
-  # This is the path endpoint, with a variable sub
+  
   '/notificationtargets/{notificationTargetId}':
-    # This is a HTTP operation
+
     delete:
       summary: Delete the notification target specified in the request.
       description: |
@@ -1344,10 +1506,10 @@ paths:
         If notification target with specified id not found, returns 404.
       operationId: deleteNotificationTarget
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: notificationTargetId
           in: path
@@ -1355,29 +1517,29 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-          # Response code
+          
           404:
             description: When notification target with specified id is not found.
-          # Response code
+          
           204:
             description: Succefully deleted.
 
 
-  # This is the path endpoint, with a variable sub
+  
   '/notificationtargets/{notificationTargetId}':
-    # This is a HTTP operation
+
     get:
       summary: Get the notification target specified in the request.
       description: |
         Get the notification target specified in the request. if not found, we return 404.
       operationId: getNotificationTarget
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: notificationTargetId
           in: path
@@ -1385,24 +1547,24 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Successful response with a notificationtarget
-          # A schema describing your response object.
+          
 
           schema:
             $ref: '#/definitions/NotificationTarget'
-        # Response code
+        
         404:
           description: Notification taget not found.
 
 
 
-  # This is the path endpoint, with a variable sub
+  
   '/projects/{projectId}/builds':
-    # This is a HTTP operation
+
     get:
       summary: Get the builds associated with the project.
       description: |
@@ -1410,10 +1572,10 @@ paths:
         If not build are found, returns an empty JSON array.
       operationId: getBuildsForProject
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: projectId
           in: path
@@ -1421,9 +1583,9 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Successful response with a listing of builds.
           schema:
@@ -1431,7 +1593,7 @@ paths:
             items:
               $ref: '#/definitions/Build'
 
-    # This is a HTTP operation
+
     post:
       summary: Create a new build per the request params.
       description: |
@@ -1457,12 +1619,12 @@ paths:
             $ref: '#/definitions/Build'
           required: true
 
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         201:
           description: Creates a new build.
-          # A schema describing the response object.
+          
           schema:
             $ref: '#/definitions/Build'
 
@@ -1478,7 +1640,7 @@ paths:
         - application/json
       produces:
         - application/json
-      # Returns :
+      
       parameters:
         - name: projectId
           in: path
@@ -1500,14 +1662,14 @@ paths:
                 type: string
 
 
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         201:
           description: Build started.
           schema:
             $ref: '#/definitions/Build'
-        # Response code
+        
         500:
           description: Failed to start the build.
 
@@ -1520,10 +1682,10 @@ paths:
         If there are no deployments, returns an empty list.
       operationId: getDeploymentsForProject
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: projectId
           in: path
@@ -1531,12 +1693,12 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Successful response with a listing of deployments.
-          # A schema describing the response object.
+          
           schema:
             type: array
             items:
@@ -1549,10 +1711,10 @@ paths:
         If failed to create returns 404.
       operationId: createDeployment
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: projectId
           in: path
@@ -1568,12 +1730,12 @@ paths:
             $ref: '#/definitions/Deployment'
           required: true
 
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         201:
           description: Successful response with details of the newly created post deployment.
-          # A schema describing the response object.
+          
           schema:
             $ref: '#/definitions/Deployment'
 
@@ -1586,10 +1748,10 @@ paths:
         If there are no such post deploy actions, return an empty list.
       operationId: getProjectPostDeployActions
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: projectId
           in: path
@@ -1597,12 +1759,12 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Successful response with a listing of post deployment actions.
-          # A schema describing the response object.
+          
           schema:
             type: array
             items:
@@ -1615,10 +1777,10 @@ paths:
         If failed to create returns 500.
       operationId: createPostDeployAction
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: projectId
           in: path
@@ -1634,19 +1796,19 @@ paths:
             $ref: '#/definitions/PostDeployAction'
           required: true
 
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         201:
           description: Successful response with details of the newly created post deployment action.
-          # A schema describing the response object.
+          
           schema:
             $ref: '#/definitions/PostDeployAction'
 
 
-  # This is the path endpoint, with a variable sub
+  
   '/projects/builds/{buildId}':
-    # This is a HTTP operation
+
     delete:
       summary: Deletes the build specified in the request params.
       description: |
@@ -1654,10 +1816,10 @@ paths:
         If build with specified id not found, returns 404.
       operationId: deleteBuild
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: buildId
           in: path
@@ -1665,12 +1827,12 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-          # Response code
+          
           404:
             description: Build with specified id is not found.
-          # Response code
+          
           204:
             description: Succefully deleted.
 
@@ -1683,10 +1845,10 @@ paths:
         If there is no such post deploy action, return 404.
       operationId: getPostDeployAction
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: postDeployActionId
           in: path
@@ -1694,12 +1856,12 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Successful response with a post deployment action.
-          # A schema describing the response object.
+          
           schema:
             $ref: '#/definitions/PostDeployAction'
 
@@ -1710,7 +1872,7 @@ paths:
           If there is no such post deploy action, return 404.
         operationId: deletePostDeplyAction
         consumes:
-          - application/json # This operation doesn't actually consume anything, this should be removed?
+          - application/json
         produces:
           - application/json
         # This is array of Delete operation parameters:
@@ -1721,12 +1883,12 @@ paths:
             required: true
             type: integer
             format: int32
-        # Expected responses for this operation:
+        
         responses:
-            # Response code
+            
             404:
               description: Post deployment action with specified id is not found.
-            # Response code
+            
             204:
               description: Post deployment action succefully deleted.
 
@@ -1758,28 +1920,28 @@ paths:
             $ref: '#/definitions/StormRunnerRequest'
           required: true
 
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: |
             Successful response with list of tests.
-          # A schema describing the response object.
+          
           schema:
             type: array
             items:
               $ref: '#/definitions/StormRunnerTest'
-         # Response code
+         
         404:
           description: When tests not were found for the user with given tenanat id.
-         # Response code
+         
         403:
           description: When user is not authenticated in storm runner.
 
 
-  # This is the path endpoint, with a variable sub
+  
   '/projects/{projectId}/notificationtargets':
-    # This is a HTTP operation
+
     get:
       summary: Get the set of notification targets associated with the project specified in the request.
       description: |
@@ -1787,10 +1949,10 @@ paths:
         the request. if there is nothing found, we return empty list.
       operationId: getNotificationTargetsForProject
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: projectId
           in: path
@@ -1798,12 +1960,12 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Successful response with a list of notification targets or empty list if there is no notification targets in the database.
-          # A schema describing your response object.
+          
 
           schema:
             type: array
@@ -1820,7 +1982,7 @@ paths:
         - application/json
       produces:
         - application/json
-      # Returns :
+      
       parameters:
         - name: projectId
           in: path
@@ -1836,20 +1998,20 @@ paths:
             $ref: '#/definitions/NotificationTarget'
           required: true
 
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         201:
           description: Creates a new notification target.
           schema:
             $ref: '#/definitions/NotificationTarget'
-       # Response code
+       
         500:
           description: Failed to creates a new notification target.
 
 
   '/targets/{targetId}':
-    # This is a HTTP operation
+
     get:
       summary: Get the deployment environment/target specified by `targetId`.
       description: |
@@ -1857,10 +2019,10 @@ paths:
         item is not found, return a `404/NOT_FOUND`.
       operationId: getEnvironment
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: targetId
           in: path
@@ -1868,15 +2030,15 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Successful response with a target/environment object
-          # A schema describing your response object.
+          
           schema:
             $ref: '#/definitions/Environment'
-        # Response code
+        
         404:
           description: The specified target/environment is not found.
 
@@ -1904,20 +2066,20 @@ paths:
           schema:
             $ref: '#/definitions/Environment'
 
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: The updated target.
           schema:
             $ref: '#/definitions/Environment'
-        # Response code
+        
         default:
           description: Failed to update a target.
           schema:
             $ref: '#/definitions/ErrorResponse'
 
-    # This is a HTTP operation
+
     delete:
       summary: Delete the deployment environment/target specified by `targetId`.
       description: |
@@ -1925,10 +2087,10 @@ paths:
         If the target is not found, returns `404`.
       operationId: deleteEnvironment
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: targetId
           in: path
@@ -1936,18 +2098,18 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         500:
           description: When environment with specified id is not found or there are projects using it.
-        # Response code
+        
         204:
           description: Successfully deleted.
 
 
   '/targets/{targetId}/projects':
-    # This is a HTTP operation
+
     get:
       summary: Get the projects associated with the environment specified by `targetId`.
       description: |
@@ -1956,10 +2118,10 @@ paths:
         and an empty set.
       operationId: getProjectsForEnvironment
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
+      
       parameters:
         - name: targetId
           in: path
@@ -1967,12 +2129,12 @@ paths:
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
+      
       responses:
-        # Response code
+        
         200:
           description: Successful response with a list of projects or empty list if there is no projects targeting the target/environment.
-          # A schema describing your response object.
+          
 
           schema:
             type: array
@@ -1986,22 +2148,21 @@ paths:
           description: Unexpected error.
 
 
-  # This is the path endpoint, with a variable sub
+  
   '/types/notificationtargets':
-    # This is a HTTP operation
+
     get:
       summary: Get the set of Notification Target types.
       description: |
         Get the set of Notification Target types.
       operationId: getNotificationTargetTypes
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
+        - application/json
       produces:
         - application/json
 
-      # Expected responses for this operation:
+      
       responses:
-        # Response code FIXME: there should be a reference to an object here
         200:
           description: Successful response with a notificationtarget types
 
@@ -2013,261 +2174,253 @@ paths:
         Get the set of Post Deploy Action types.
       operationId: getPostDeployActionTypes
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
+        - application/json
       produces:
         - application/json
-        # Expected responses for this operation:
+        
       responses:
-        # Response code
+        
         200:
           description: Successful response with Post Deploy Action types.
 
 
-  # This is the path endpoint, with a variable sub
+  ######################### /users #########################
   '/users':
-    # This is a HTTP operation
-    post:
-      summary: Create a HelionCE user with the details specified in the request body.
-      description: |
-        Create a HelionCE user with the details specified in the request body and return 201.
-        If failed to create returns 500.
-      operationId: createUser
+
+    get:
+      tags:
+        - User
+      summary: List all users.
+      operationId: get_users
       consumes:
         - application/json
       produces:
         - application/json
-      # Returns :
+      responses:
+        200:
+          description: Array of user objects. May be empty.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+        default:
+          description: Unknown error.
+
+
+
+    post:
+      tags:
+        - User
+      summary: Create a user.
+      operationId: create_user
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      
       parameters:
        - name: user
          in: body
-         description: The user JSON to post.
+         description: User object.
          schema:
            $ref: '#/definitions/User'
          required: true
-
-      # Expected responses for this operation:
       responses:
-        # Response code FIXME: does this return an object
         201:
-          description: Creates a new user.
-          # A schema describing your response object.
-
+          description: Newly created user.
           schema:
             $ref: '#/definitions/User'
-
-       # Response code
-        500:
-          description: Failed to creates a new user.
+        default:
+          description: Failed to create the user.
 
 
-  # This is the path endpoint, with a variable sub
-  '/users/{userId}':
-    # This is a HTTP operation
+
+  ######################### /users/{user_id} #########################
+  '/users/{user_id}':
+
     get:
-      summary: Returns the HelionCE user with the specified ID.
-      description: |
-        Returns the HelionCE user with the specified ID. If there are no matching user, return a 404 not found.
-      operationId: getUser
+      tags:
+        - User
+      summary: Get the specified user.
+      operationId: get_user
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
       parameters:
-        - name: userId
+        - name: user_id
           in: path
-          description: The user id.
+          description: User id.
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
       responses:
-        # Response code
         200:
-          description: Successful response with a user object.
-          # A schema describing your response object.
-
+          description: User object.
           schema:
             $ref: '#/definitions/User'
-        # Response code
         404:
-          description: user not found.
+          description: User not found.
 
-    # This is a HTTP operation
+
     put:
-      summary: Updates a user definition.
-      description: |
-        Updates a user definition and returns 200. If failed to update returns 500.
-      operationId: updateUser
+      tags:
+        - User
+      summary: Update the specified user.
+      operationId: update_user
       consumes:
         - application/json
       produces:
         - application/json
-      # Returns :
       parameters:
-        - name: userId
+        - name: user_id
           in: path
-          description: The user id to update user definition for.
+          description: User id.
           required: true
           type: integer
           format: int32
 
         - name: user
           in: body
-          description: The user JSON to post.
+          description: User object (with updated values).
           schema:
            $ref: '#/definitions/User'
           required: true
-
-      # Expected responses for this operation:
       responses:
-        # Response code
         200:
-          description: Updates a user.
-          # A schema describing your response object.
-
+          description: Updated user object.
           schema:
             $ref: '#/definitions/User'
+        default:
+          description: Failed to update the user.
 
-        # Response code
-        500:
-          description: Failed to update a user.
 
     delete:
-      summary: Delete the HelionCE user with the specified ID.
-      description: |
-        Delete the HelionCE user with the specified ID.
-        If user with specified id not found, returns 404.
-      operationId: deleteUser
+      tags:
+        - User
+      summary: Delete the specified user.
+      operationId: delete_user
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
+        - application/json
       produces:
         - application/json
-      # This is array of GET operation parameters:
       parameters:
-        - name: userId
+        - name: user_id
           in: path
-          description: Id for ci/cd user we want to delete.
+          description: User id.
           required: true
           type: integer
           format: int32
-      # Expected responses for this operation:
       responses:
-          # Response code
-          404:
-            description: User with specified id is not found.
-          # Response code
-          204:
-            description: Succefully deleted.
+        204:
+          description: User deleted.
+        default:
+          description: Failed to delete user.
 
-
-
-
-
-
-
-  '/users/{userId}/targets':
-
+  ######################### /users/github/{github_user_id} #########################
+  '/users/github/{github_user_id}':
     get:
-      summary: Get the set of deployment environments/targets associated with the user specified by `userId`.
-      description: |
-        Get the set of deployment environments/targets associated with the user
-        specified in the request. If there are no matching environments, return
-        a 200/OK and an empty set.
-      operationId: getEnvironmentsForUser
+      tags:
+        - User
+      summary: Get the user matching the specified GitHub user id.
+      operationId: get_user_by_github_id
       consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
+        - application/json
       produces:
         - application/json
       parameters:
-        - name: userId
+        - name: github_user_id
           in: path
-          description: The user id to get environments for.
+          description: GitHub user id.
           required: true
-          type: integer
+          type: string
           format: int32
-      # Expected responses for this operation:
       responses:
-        # Response code
         200:
-          description: Successful response with a list of targets or empty list if there is no targets for the user.
-          # A schema describing your response object.
-
+          description: User object.
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/Environment'
+            $ref: '#/definitions/User'
+        404:
+          description: No user matching the specified GitHub user id.
+
+
+  ######################### /environments #########################
+  '/environments':
 
     post:
-      summary: Create a new deployment environment.
+      summary: Register an environment.
       description: |
-        Create a new deployment environment for the specified user and per the params in the body.
-        Return 201 on success, and 500 on failure.
-      operationId: createEnvironment
+        Register a deployment environment (target), such as a CloudFoundry instance.
+      operationId: register_environment
       consumes:
         - application/json
       produces:
          - application/json
       parameters:
-        - name: userId
-          in: path
-          description: The user id to create the environment for.
+        - name: environment
+          in: body
+          description: Environment object.
+          schema:
+            $ref: '#/definitions/Environment'
+          required: true
+      responses:
+        201:
+          description: Newly created enviroment object.
+          schema:
+            $ref: '#/definitions/Environment'
+        default:
+          description: Failed to create the environment.
+
+
+    get:
+      summary: List the registered environments.
+      operationId: get_environments
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        200:
+          description: |
+            Array of `Environment` objects, which may be empty.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Environment'
+        default:
+          description: Unknown error.
+
+
+    get:
+      summary: Get the environments owned by the specified user.
+      operationId: get_environments_for_user
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: user_id
+          in: query
+          description: User id.
           required: true
           type: integer
           format: int32
-
-        - name: target
-          in: body
-          description: The target JSON to post.
-          schema:
-            $ref: '#/definitions/Environment'
-          required: true
-
-      # Expected responses for this operation:
       responses:
-        # Response code
-        201:
-          description: Returns newly created target object.
-          schema:
-            $ref: '#/definitions/Environment'
-        # Response code
-        500:
-          description: Failed to creates a new target.
-
-
-  # This is the path endpoint, with a variable sub
-  '/users/github/{userId}':
-    # This is a HTTP operation
-    get:
-      summary: Returns the GitHub user with the specified ID.
-      description: |
-        Returns the GitHub user with the specified ID. If there are no matching user, return a 404 not found.
-      operationId: getGitHubUser
-      consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
-      produces:
-        - application/json
-      # This is array of GET operation parameters:
-      parameters:
-        - name: userId
-          in: path
-          description: |
-            The GitHub user id.
-          required: true
-          type: string
-          format: int32
-      # Expected responses for this operation:
-      responses:
-        # Response code
         200:
-          description: Successful response with a github user object.
-          # A schema describing your response object.
-
+          description: |
+            Array of `Environment` objects, which may be empty.
           schema:
-            $ref: '#/definitions/User'
-        # Response code
-        404:
-          description: GitHub user not found.
+            type: array
+            items:
+              $ref: '#/definitions/Environment'
+        default:
+          description: Unknown error.
+
+
+
+
+
+
 
 
 
@@ -2808,7 +2961,7 @@ definitions:
             `TRUE` if the member is an owner of the project, `FALSE` otherwise.
 
 
-  ############## VCS ##############
+  ############## VcsAccount ##############
   Vcs:
     type: object
     description: |
@@ -2836,6 +2989,37 @@ definitions:
       label:
         type: string
         description: The user-friendly label for this VCS instance. Must be unique.
+
+
+  ############## VcsAccount ##############
+  VcsAccount:
+    type: object
+    description: |
+      Models a user account on a particular VCS instance.
+    required:
+      - vcs_account_id
+      - vcs_id
+      - user_id
+    properties:
+      vcs_account_id:
+        type: integer
+        format: int32
+        description: The (HCE) id of this VCS account instnace.
+      vcs_id:
+        type: integer
+        format: int32
+        description: The (HCE) id of the VCS instance this account belongs to.
+      user_id:
+        type: integer
+        format: int32
+        description: The (HCE) id of the (HCE) user this account belongs to.
+      vcs_user_id:
+        type: string
+        description: The VCS instance's identifer for this account (e.g. the GitHub user id).
+      vcs_account_credential_id:
+        type: integer
+        format: int32
+        description: The (HCE) id of this account's credential for accessing the VCS instance.
 
   ############## ContainerRegistry ##############
   ContainerRegistry:
