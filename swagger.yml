@@ -1468,7 +1468,7 @@ paths:
           schema:
             $ref: '#/definitions/Artifact'
 
-
+  ######################### /builds/triggers #########################
   '/builds/triggers':
 
     post:
@@ -1498,7 +1498,7 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
 
-
+  ######################### /builds/triggers/{trigger_id} #########################
   '/builds/triggers/{trigger_id}':
 
     get:
@@ -1526,371 +1526,407 @@ paths:
           description: Failed to get BuildTrigger.
 
 
+  ######################### /builds/events #########################
+  '/builds/events':
 
-  ######################### /deployments/{deploymentId} #########################
-  '/deployments/{deploymentId}':
-    get:
-      summary: Get a deployment with deployment id specified in the request.
-      description: |
-        Get a deployment with deployment id specified in the request.
-        If there is no deployment, returns 404.
-      operationId: getDeployment
+    post:
+      tags:
+        - Build
+      summary: Add (insert) a BuildEvent.
+      operationId: add_build_event
       consumes:
         - application/json
       produces:
         - application/json
-      
       parameters:
-        - name: deploymentId
+        - name: build_event
+          in: body
+          description: Build event.
+          schema:
+            $ref: '#/definitions/BuildEvent'
+          required: true
+
+      responses:
+        201:
+          description: Added BuildEvent.
+          schema:
+            $ref: '#/definitions/BuildEvent'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    get:
+      tags:
+        - Build
+      summary: List build events, optionally filtering by Build id.
+      operationId: get_build_events
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: build_id
+          in: query
+          description: Build id.
+          required: false
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: Array of BuildEvent objects. May be empty.
+          schema:
+            type: array
+            items:
+            $ref: '#/definitions/BuildEvent'
+        default:
+          description: Unexpected error.
+
+  ######################### /builds/events/{event_id} #########################
+  '/builds/events/{event_id}':
+
+    get:
+      tags:
+        - Build
+      summary: Get the specified build event.
+      operationId: get_build_event
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: event_id
           in: path
-          description: The deployment id to find and return deployment.
+          description: BuildEvent id.
           required: true
           type: integer
           format: int32
-      
       responses:
-        
+        200:
+          description: BuildEvent object.
+          schema:
+            $ref: '#/definitions/BuildEvent'
+        default:
+          description: Failed to get BuildEvent.
+
+
+
+######################### /deployments #########################
+  '/deployments':
+    get:
+      tags:
+        - Deployment
+      summary: List deployments, optionally filtering by Project id.
+      operationId: get_deployments
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: project_id
+          in: query
+          description: Project id.
+          required: false
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: Array of deployments.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Deployment'
+    post:
+      tags:
+        - Deployment
+      summary: Add a deployment.
+      description: |
+        Add a deploymennt. FIXME: Does invoking this method REGISTER a deployment that has occurred, or does it initiate a deployment?
+      operationId: add_deployment
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: deployment
+          in: body
+          description: Deployment object.
+          schema:
+            $ref: '#/definitions/Deployment'
+          required: true
+      responses:
+        201:
+          description: Deployment object.
+          schema:
+            $ref: '#/definitions/Deployment'
+
+
+
+  ######################### /deployments/{deployment_id} #########################
+  '/deployments/{deployment_id}':
+    get:
+      tags:
+        - Deployment
+      summary: Get the specified deployment.
+      operationId: get_deployment
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: deployment_id
+          in: path
+          description: Deployment iod.
+          required: true
+          type: integer
+          format: int32
+      responses:
         200:
           description: Successful response with a deployments.
-          
           schema:
             $ref: '#/definitions/Deployment'
 
     delete:
-      summary: Delete the deployment specified in the request.
+      tags:
+        - Deployment
+      summary: Remove the specified deployment.
       description: |
-        Delete the deployment specified in the request.
-        If there is no deployment, returns 404.
-      operationId: deleteDeployment
+        Remove the specified deployment. FIXME: Does invoking this operation indicate that a deployment has been deleted, or does it initiate deletion of a deployment?
+      operationId: remove_deployment
       consumes:
         - application/json
       produces:
         - application/json
-      
       parameters:
-        - name: deploymentId
+        - name: deployment_id
           in: path
-          description: The deployment id to find and return deployment.
+          description: Deployment id.
           required: true
           type: integer
           format: int32
-      
       responses:
-          
-          404:
-            description: Deployment with specified id is not found.
-          
           204:
-            description: Deployment Succefully deleted.
+            description: Removed deployment.
+          default:
+            description: Failed to remove deployment.
+          
 
 
-  
-  '/notificationtargets/{notificationTargetId}':
 
-    delete:
-      summary: Delete the notification target specified in the request.
+  ######################### /notification_targets #########################
+  '/notification_targets':
+    get:
+      tags:
+        - Notification
+      summary: List notifiction targets, optionally filtering.
+      operationId: get_notification_targets
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: project_id
+          in: query
+          description: The internal project id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: Array of NotificationTarget objects.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/NotificationTarget'
+    post:
+      tags:
+        - Notification
+      summary: Add a NotificationTarget (for a project).
       description: |
-        Delete the notification target specified in the request.
-        If notification target with specified id not found, returns 404.
+      operationId: add_notification_target
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+
+        - name: notification_target
+          in: body
+          description: NotificationTarget object.
+          schema:
+            $ref: '#/definitions/NotificationTarget'
+          required: true
+      responses:
+        201:
+          description: Added NotificationTarget.
+          schema:
+            $ref: '#/definitions/NotificationTarget'
+        default:
+          description: Unexpected error
+
+
+
+  ######################### /notification_targets/{notification_target_id} #########################
+  '/notification_targets/{notification_target_id}':
+
+    get:
+      summary: Get the specified NotificationTarget.
+      operationId: get_notification_target
+      consumes:
+        - application/json
+      produces:
+        - application/json
+
+      parameters:
+        - name: notification_target_id
+          in: path
+          description: NotificationTarget id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: NotifictionTarget object.
+          schema:
+            $ref: '#/definitions/NotificationTarget'
+        404:
+          description: Not found.
+    delete:
+      summary: Remove NotificationTarget.
       operationId: deleteNotificationTarget
       consumes:
         - application/json
       produces:
         - application/json
-      
       parameters:
-        - name: notificationTargetId
+        - name: notification_target_id
           in: path
-          description: Internal id for the notification target we want to delete.
+          description: NotificationTarget id.
           required: true
           type: integer
           format: int32
-      
       responses:
-          
-          404:
-            description: When notification target with specified id is not found.
-          
-          204:
-            description: Succefully deleted.
+        204:
+          description: Removed NotificationTarget.
+        default:
+          description: Unexpcted error.
 
 
-  
-  '/notificationtargets/{notificationTargetId}':
 
+  ######################### /post_deploy_actions #########################
+  '/post_deploy_actions':
     get:
-      summary: Get the notification target specified in the request.
-      description: |
-        Get the notification target specified in the request. if not found, we return 404.
-      operationId: getNotificationTarget
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      
-      parameters:
-        - name: notificationTargetId
-          in: path
-          description: The internal notificationtarget id.
-          required: true
-          type: integer
-          format: int32
-      
-      responses:
-        
-        200:
-          description: Successful response with a notificationtarget
-          
-
-          schema:
-            $ref: '#/definitions/NotificationTarget'
-        
-        404:
-          description: Notification taget not found.
-
-
-
-  
-
-
-
-
-
-
-
-
-
-  '/projects/{projectId}/deployments':
-    get:
-      summary: Get the set of deployments associated with the project specified in the request.
-      description: |
-        Get the set of deployments associated with the project specified in the request.
-        If there are no deployments, returns an empty list.
-      operationId: getDeploymentsForProject
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      
-      parameters:
-        - name: projectId
-          in: path
-          description: The project id to list deployments for.
-          required: true
-          type: integer
-          format: int32
-      
-      responses:
-        
-        200:
-          description: Successful response with a listing of deployments.
-          
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Deployment'
-
-    post:
-      summary: Create a deployment for a project.
-      description: |
-        Creates a new deployment for the specified project and return 201.
-        If failed to create returns 404.
-      operationId: createDeployment
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      
-      parameters:
-        - name: projectId
-          in: path
-          description: The project id to create post deployment actions for.
-          required: true
-          type: integer
-          format: int32
-
-        - name: deployment
-          in: body
-          description: The deployment JSON to post.
-          schema:
-            $ref: '#/definitions/Deployment'
-          required: true
-
-      
-      responses:
-        
-        201:
-          description: Successful response with details of the newly created post deployment.
-          
-          schema:
-            $ref: '#/definitions/Deployment'
-
-
-  '/projects/{projectId}/postdeployactions':
-    get:
-      summary: Get the set of post deployment actions associated with the project specified in the request.
-      description: |
-        Get the set of post deployment actions associated with the project specified in the request.
-        If there are no such post deploy actions, return an empty list.
+      tags:
+        - PostDeploy
+      summary: List the post-deploy actions, optionally filtering by project.
       operationId: getProjectPostDeployActions
       consumes:
         - application/json
       produces:
         - application/json
-      
       parameters:
-        - name: projectId
-          in: path
-          description: The project id to list post deployment actions for.
+        - name: project_id
+          in: query
+          description: Project id to filter by.
           required: true
           type: integer
           format: int32
-      
       responses:
-        
         200:
-          description: Successful response with a listing of post deployment actions.
-          
+          description: Array of PostDeployActions. May be empty.
           schema:
             type: array
             items:
               $ref: '#/definitions/PostDeployAction'
 
     post:
-      summary: Create a post deploy action
-      description: |
-        Creates a new post deploy action for the specified project and return 201.
-        If failed to create returns 500.
-      operationId: createPostDeployAction
+      tags:
+        - PostDeploy
+      summary: Create a post-deploy action
+      operationId: create_post_deploy_action
       consumes:
         - application/json
       produces:
         - application/json
-      
       parameters:
-        - name: projectId
-          in: path
-          description: The project id to create post deployment actions for.
-          required: true
-          type: integer
-          format: int32
-
-        - name: postdeploymentaction
+        - name: post_deploy_action
           in: body
-          description: The project JSON to post.
+          description: PostDeployAction object.
           schema:
             $ref: '#/definitions/PostDeployAction'
           required: true
-
-      
       responses:
         
         201:
-          description: Successful response with details of the newly created post deployment action.
-          
+          description: Created PostDeployAction.
           schema:
             $ref: '#/definitions/PostDeployAction'
 
 
-  
-  '/projects/builds/{buildId}':
-
-    delete:
-      summary: Deletes the build specified in the request params.
-      description: |
-        Deletes the build specified in the request params.
-        If build with specified id not found, returns 404.
-      operationId: deleteBuild
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      
-      parameters:
-        - name: buildId
-          in: path
-          description: The build id for the build we want to delete.
-          required: true
-          type: integer
-          format: int32
-      
-      responses:
-          
-          404:
-            description: Build with specified id is not found.
-          
-          204:
-            description: Succefully deleted.
-
-
-  '/postdeployactions/{postDeployActionId}':
+  ######################### /post_deploy_actions/{post_deploy_action_id} #########################
+  '/post_deploy_actions/{post_deploy_action_id}':
     get:
-      summary: Get the post deploy action specified in the request.
-      description: |
-        Get the post deploy action specified in the request.
-        If there is no such post deploy action, return 404.
-      operationId: getPostDeployAction
+      tags:
+        - PostDeploy
+      summary: Get the post-deploy action specified in the request.
+      operationId: get_post_deploy_action
       consumes:
         - application/json
       produces:
         - application/json
-      
       parameters:
-        - name: postDeployActionId
+        - name: post_deploy_action_id
           in: path
-          description: The post deployment actions id to get.
+          description: PostDeployAction id.
           required: true
           type: integer
           format: int32
-      
       responses:
-        
         200:
-          description: Successful response with a post deployment action.
-          
+          description: PostDeployAction object.
           schema:
             $ref: '#/definitions/PostDeployAction'
 
     delete:
-        summary: Deletes the post deploy action specified in the request.
-        description: |
-          Deletes the post deploy action specified in the request.
-          If there is no such post deploy action, return 404.
-        operationId: deletePostDeplyAction
-        consumes:
-          - application/json
-        produces:
-          - application/json
-        # This is array of Delete operation parameters:
-        parameters:
-          - name: postDeployActionId
-            in: path
-            description: The pot deployment action id to delete.
-            required: true
-            type: integer
-            format: int32
-        
-        responses:
+      tags:
+        - PostDeploy
+      summary: Deletes the PostDeployAction specified in the request.
+      operationId: delete_post_deploy_action
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: post_deploy_action_id
+          in: path
+          description: The pot deployment action id to delete.
+          required: true
+          type: integer
+          format: int32
+
+      responses:
+        204:
+          description: Deleted PostDeployAction.
+        default:
+          description: Failed to delete PostDeployAction.
             
-            404:
-              description: Post deployment action with specified id is not found.
-            
-            204:
-              description: Post deployment action succefully deleted.
 
 
-  '/projects/{projectId}/stormrunner/connect':
+  ######################### /post_deploy_actions/stormrunner/connect #########################
+  '/post_deploy_actions/stormrunner/connect':
     post:
+      tags:
+        - PostDeploy
       summary: Connects to storm runner end point.
       description: |
         Connects to storm runner end point and returns list of tests.
         If failed to autheticate it returns 403 and if no tests found return 404.
+        FIXME: This whole operation seems out of place... why is CREST doing this?
       operationId: connectToStormRunner
       consumes:
         - application/json
       produces:
         - application/json
-      # This is array of Connect operation parameters:
       parameters:
         - name: projectId
           in: path
@@ -1898,180 +1934,34 @@ paths:
           required: true
           type: integer
           format: int32
-
         - name: stormRunnerRequest
           in: body
           description: The storm runner request JSON to post.
           schema:
             $ref: '#/definitions/StormRunnerRequest'
           required: true
-
-      
       responses:
-        
         200:
           description: |
             Successful response with list of tests.
-          
           schema:
             type: array
             items:
               $ref: '#/definitions/StormRunnerTest'
-         
         404:
           description: When tests not were found for the user with given tenanat id.
-         
         403:
           description: When user is not authenticated in storm runner.
 
 
   
-  '/projects/{projectId}/notificationtargets':
-
-    get:
-      summary: Get the set of notification targets associated with the project specified in the request.
-      description: |
-        Get the set of notification targets associated with the project specified in
-        the request. if there is nothing found, we return empty list.
-      operationId: getNotificationTargetsForProject
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      
-      parameters:
-        - name: projectId
-          in: path
-          description: The internal project id.
-          required: true
-          type: integer
-          format: int32
-      
-      responses:
-        
-        200:
-          description: Successful response with a list of notification targets or empty list if there is no notification targets in the database.
-          
-
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/NotificationTarget'
-
-    post:
-      summary: Create a new notification target for a project.
-      description: |
-        Create a new notification target for the specified project and return 201.
-        If failed to create returns 500.
-      operationId: createNotificationTarget
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      
-      parameters:
-        - name: projectId
-          in: path
-          description: The project id to create notification target for.
-          required: true
-          type: integer
-          format: int32
-
-        - name: notificationtarget
-          in: body
-          description: The target JSON to post.
-          schema:
-            $ref: '#/definitions/NotificationTarget'
-          required: true
-
-      
-      responses:
-        
-        201:
-          description: Creates a new notification target.
-          schema:
-            $ref: '#/definitions/NotificationTarget'
-       
-        500:
-          description: Failed to creates a new notification target.
 
 
 
 
-#  '/targets/{targetId}/projects':
-#
-#    get:
-#      summary: Get the projects associated with the environment specified by `targetId`.
-#      description: |
-#        Get the set of projects associated with the deployment environment
-#        specified in the request. If there are no matching projects, return a 200/OK
-#        and an empty set.
-#      operationId: getProjectsForEnvironment
-#      consumes:
-#        - application/json
-#      produces:
-#        - application/json
-#
-#      parameters:
-#        - name: targetId
-#          in: path
-#          description: The internal target id.
-#          required: true
-#          type: integer
-#          format: int32
-#
-#      responses:
-#
-#        200:
-#          description: Successful response with a list of projects or empty list if there is no projects targeting the target/environment.
-#
-#
-#          schema:
-#            type: array
-#            items:
-#              $ref: '#/definitions/Project'
-#
-#        404:
-#          description: No environment matching `targetId`.
-#
-#        default:
-#          description: Unexpected error.
 
 
-  
-  '/types/notificationtargets':
 
-    get:
-      summary: Get the set of Notification Target types.
-      description: |
-        Get the set of Notification Target types.
-      operationId: getNotificationTargetTypes
-      consumes:
-        - application/json
-      produces:
-        - application/json
-
-      
-      responses:
-        200:
-          description: Successful response with a notificationtarget types
-
-
-  '/types/postdeployactions':
-    get:
-      summary: Get the set of Post Deploy Action types.
-      description: |
-        Get the set of Post Deploy Action types.
-      operationId: getPostDeployActionTypes
-      consumes:
-        - application/json
-      produces:
-        - application/json
-        
-      responses:
-        
-        200:
-          description: Successful response with Post Deploy Action types.
 
 
   ######################### /users #########################
@@ -2521,6 +2411,7 @@ definitions:
       - result
       - started
       - finished
+      - data
     properties:
       build_event_id:
         type: integer
@@ -2548,10 +2439,11 @@ definitions:
         type: string
         description: Build event start timestamp.
         format: date-time
-      artifact_id:
-        type: integer
-        format: int32
-        description: The id of the artifact produced by this build event.
+      data:
+        type: string
+        format: binary
+        description: Data returned by the event.
+
 
   ############## artifact ##############
   Artifact:
@@ -3187,53 +3079,5 @@ definitions:
       log:
         type: string
         description: Any additional error information, such as log entries, stack trace, etc. Likely to be turned off in production environments.
-
-
-
-  ############## Branch ##############
-  Branch:
-    type: object
-    description: |
-      A branch of a repo.
-    required:
-      - name
-    properties:
-      name:
-        type: string
-        description: The branch name, e.g. `master`.
-      allCommitsLoaded:
-        type: boolean
-        description: |
-          This is `true` if all commits for this branch have been loaded. TBD: This looks like some UI-related funkiness.
-      commitPagesLoaded:
-        type: integer
-        format: int32
-        description: The number of commit pages loaded (for the purposes of paging through the set of commits).
-      commit:
-        $ref: '#/definitions/Commit'
-      commits:
-        type: array
-        description: An array of `commit` objects, which can be empty.
-        items:
-          $ref: '#/definitions/Commit'
-
-
-  ############## Commit ##############
-  Commit:
-    type: object
-    description: |
-      A commit to a repo.
-    required:
-      - sha
-      - url
-    properties:
-      sha:
-        type: string
-        description: |
-          The SHA of the commit, e.g. `5d26f03424872b5235ea1a1e1a6262e61e4f430c`.
-      url:
-        type: string
-        description: |
-          The URL of the commit, e.g. `https://api.github.com/repos/neilotoole/helion-hello-node/commits/5d26f03424872b5235ea1a1e1a6262e61e4f430c`.
 
 
