@@ -376,10 +376,10 @@ paths:
     post:
       tags:
         - Container
-      summary: Register a ContainerRegistry instance.
+      summary: Add a ContainerRegistry instance.
       description: |
-        Register a ContainerRegistry instance, such as DockerHub, or a local registry.
-      operationId: registerContainerRegistry
+        Add (register) a ContainerRegistry instance, such as DockerHub, or a local registry.
+      operationId: addContainerRegistry
       consumes:
         - application/json
       produces:
@@ -387,13 +387,13 @@ paths:
       parameters:
         - name: registry
           in: body
-          description: The ContainerRegistry to register.
+          description: The ContainerRegistry to add.
           schema:
             $ref: '#/definitions/ContainerRegistry'
           required: true
       responses:
         201:
-          description: Item registered.
+          description: Added ContainerRegistry.
           schema:
             $ref: '#/definitions/ContainerRegistry'
         default:
@@ -433,8 +433,8 @@ paths:
     delete:
       tags:
         - Container
-      summary: Unregister the specified ContainerRegistry.
-      operationId: unregisterContainerRegistry
+      summary: Remove (unregister) the specified ContainerRegistry.
+      operationId: removeContainerRegistry
       produces:
         - application/json
       parameters:
@@ -446,7 +446,7 @@ paths:
           format: int32
       responses:
           204:
-            description: Item unregistered.
+            description: ContainerRegistry removed.
           404:
             description: Item with specified id not found.
 
@@ -481,24 +481,24 @@ paths:
     post:
       tags:
         - Container
-      summary: Register a ContainerImage instance.
+      summary: Add a ContainerImage instance.
       description: |
-        Register a ContainerImage instance, such as a Docker image.
-      operationId: registerContainerImage
+        Add (register) a ContainerImage instance, such as a Docker image.
+      operationId: addContainerImage
       consumes:
         - application/json
       produces:
         - application/json
       parameters:
-        - name: registry
+        - name: image
           in: body
-          description: The ContainerImage to register.
+          description: The ContainerImage to add.
           schema:
             $ref: '#/definitions/ContainerImage'
           required: true
       responses:
         201:
-          description: Item registered.
+          description: Added container image.
           schema:
             $ref: '#/definitions/ContainerImage'
         default:
@@ -533,22 +533,22 @@ paths:
     delete:
       tags:
         - Container
-      summary: Unregister the specified ContainerImage.
-      operationId: unregisterContainerImage
+      summary: Remove (unregister) the specified ContainerImage.
+      operationId: removeContainerImage
       produces:
         - application/json
       parameters:
         - name: imageId
           in: path
-          description: The (internal) ContainerImage id.
+          description: The (HCE) ContainerImage id.
           required: true
           type: integer
           format: int32
       responses:
           204:
-            description: Item unregistered.
+            description: Image unregistered.
           404:
-            description: Item with specified id not found.
+            description: Image with specified id not found.
 
     get:
       tags:
@@ -581,10 +581,10 @@ paths:
     post:
       tags:
         - Container
-      summary: Register a BuildContainer instance.
+      summary: Add a BuildContainer instance.
       description: |
-        Register a BuildContainer instance, such as a BuildContainer for Java, or nodejs, or PHP, etc.
-      operationId: registerBuildContainer
+        Add (register) a BuildContainer instance, such as a BuildContainer for Java, or nodejs, or PHP, etc.
+      operationId: addBuildContainer
       consumes:
         - application/json
       produces:
@@ -592,13 +592,13 @@ paths:
       parameters:
         - name: build_container
           in: body
-          description: The BuildContainer to register.
+          description: The BuildContainer to add.
           schema:
             $ref: '#/definitions/BuildContainer'
           required: true
       responses:
         201:
-          description: Item registered.
+          description: Added BuildContainer.
           schema:
             $ref: '#/definitions/BuildContainer'
         default:
@@ -633,20 +633,20 @@ paths:
     delete:
       tags:
         - Container
-      summary: Unregister the specified BuildContainer.
-      operationId: unregister_build_container
+      summary: Remove (unregister) the specified BuildContainer.
+      operationId: remove_build_container
       produces:
         - application/json
       parameters:
         - name: container_id
           in: path
-          description: The (internal) BuildContainer id.
+          description: The (HCE) BuildContainer id.
           required: true
           type: integer
           format: int32
       responses:
           204:
-            description: Item unregistered.
+            description: Item removed.
           404:
             description: Item with specified id not found.
 
@@ -2317,31 +2317,6 @@ paths:
         default:
           description: Failed to delete user.
 
-  ######################### /users/github/{github_user_id} #########################
-  '/users/github/{github_user_id}':
-    get:
-      tags:
-        - User
-      summary: Get the user matching the specified GitHub user id.
-      operationId: get_user_by_github_id
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: github_user_id
-          in: path
-          description: GitHub user id.
-          required: true
-          type: string
-          format: int32
-      responses:
-        200:
-          description: User object.
-          schema:
-            $ref: '#/definitions/User'
-        404:
-          description: No user matching the specified GitHub user id.
 
 
   ######################### /environments #########################

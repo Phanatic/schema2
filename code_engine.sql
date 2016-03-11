@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.5.44-log)
 # Database: codeengine
-# Generation Time: 2016-03-09 19:53:57 +0000
+# Generation Time: 2016-03-11 07:55:21 +0000
 # ************************************************************
 
 
@@ -188,33 +188,24 @@ CREATE TABLE `build_trigger` (
 
 
 
-# Dump of table build_trigger_manual_git
+# Dump of table build_trigger_manual
 # ------------------------------------------------------------
 
-DROP TABLE IF EXISTS `build_trigger_manual_git`;
+DROP TABLE IF EXISTS `build_trigger_manual`;
 
-CREATE TABLE `build_trigger_manual_git` (
+CREATE TABLE `build_trigger_manual` (
   `build_trigger_id` int(11) NOT NULL,
-  `commit_sha` varchar(255) DEFAULT NULL,
+  `commit_ref` varchar(255) DEFAULT NULL,
+  `user_id` int(11) NOT NULL,
+  `project_id` int(11) NOT NULL,
   PRIMARY KEY (`build_trigger_id`),
   UNIQUE KEY `build_trigger_id_uindex` (`build_trigger_id`),
-  CONSTRAINT `build_trigger_manual_git_build_id_fk` FOREIGN KEY (`build_trigger_id`) REFERENCES `build_trigger` (`build_trigger_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a manual trigger of a Git-repo build.';
-
-
-
-# Dump of table build_trigger_manual_svn
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `build_trigger_manual_svn`;
-
-CREATE TABLE `build_trigger_manual_svn` (
-  `build_trigger_id` int(11) NOT NULL,
-  `branch` int(11) NOT NULL,
-  PRIMARY KEY (`build_trigger_id`),
-  UNIQUE KEY `build_trigger_manual_svn_build_trigger_id_uindex` (`build_trigger_id`),
-  CONSTRAINT `build_trigger_manual_svn_build_trigger_id_fk` FOREIGN KEY (`build_trigger_id`) REFERENCES `build_trigger` (`build_trigger_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a manual trigger of a build of a SVN repo.';
+  KEY `build_trigger_manual_user_id_fk` (`user_id`),
+  KEY `build_trigger_manual_project_id_fk` (`project_id`),
+  CONSTRAINT `build_trigger_manual_build_id_fk` FOREIGN KEY (`build_trigger_id`) REFERENCES `build_trigger` (`build_trigger_id`),
+  CONSTRAINT `build_trigger_manual_project_id_fk` FOREIGN KEY (`project_id`) REFERENCES `project` (`project_id`),
+  CONSTRAINT `build_trigger_manual_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a manual trigger of a build.';
 
 
 
@@ -229,6 +220,7 @@ CREATE TABLE `build_trigger_pull_request` (
   `commit_url` varchar(255) DEFAULT NULL,
   `compare_url` varchar(255) DEFAULT NULL,
   `pull_request_id` varchar(255) DEFAULT NULL,
+  `webhook_id` varchar(255) NOT NULL,
   PRIMARY KEY (`build_trigger_id`),
   UNIQUE KEY `build_trigger_id_uindex` (`build_trigger_id`),
   CONSTRAINT `build_trigger_pull_request_id_fk` FOREIGN KEY (`build_trigger_id`) REFERENCES `build_trigger` (`build_trigger_id`)
@@ -303,20 +295,20 @@ CREATE TABLE `container_registry` (
   `container_registry_id` int(11) NOT NULL AUTO_INCREMENT,
   `container_type_id` int(11) NOT NULL,
   `registry_url` varchar(512) NOT NULL,
-  `label` varchar(512) NOT NULL,
+  `registry_label` varchar(512) NOT NULL,
   `registry_credential_id` int(11) NOT NULL,
   PRIMARY KEY (`container_registry_id`),
   UNIQUE KEY `container_registry_id_uindex` (`container_registry_id`),
   KEY `container_registry_container_type_id_fk` (`container_type_id`),
   KEY `container_registry_credential_id_fk` (`registry_credential_id`),
-  CONSTRAINT `container_registry_credential_id_fk` FOREIGN KEY (`registry_credential_id`) REFERENCES `credential` (`credential_id`),
-  CONSTRAINT `container_registry_container_type_id_fk` FOREIGN KEY (`container_type_id`) REFERENCES `container_type` (`container_type_id`)
+  CONSTRAINT `container_registry_container_type_id_fk` FOREIGN KEY (`container_type_id`) REFERENCES `container_type` (`container_type_id`),
+  CONSTRAINT `container_registry_credential_id_fk` FOREIGN KEY (`registry_credential_id`) REFERENCES `credential` (`credential_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='List of container registries, e.g. "DockerHub", "HPE Docker US-EAST", "Amazon ECR", etc.';
 
 LOCK TABLES `container_registry` WRITE;
 /*!40000 ALTER TABLE `container_registry` DISABLE KEYS */;
 
-INSERT INTO `container_registry` (`container_registry_id`, `container_type_id`, `registry_url`, `label`, `registry_credential_id`)
+INSERT INTO `container_registry` (`container_registry_id`, `container_type_id`, `registry_url`, `registry_label`, `registry_credential_id`)
 VALUES
 	(1,2,'https://api.hub.docker.com','DockerHub',1);
 
@@ -684,6 +676,29 @@ VALUES
 UNLOCK TABLES;
 
 
+# Dump of table project_invite
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `project_invite`;
+
+CREATE TABLE `project_invite` (
+  `project_invite_id` int(11) NOT NULL AUTO_INCREMENT,
+  `invite_code` varchar(255) NOT NULL,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `claim_count` int(11) NOT NULL DEFAULT '0',
+  `project_id` int(11) NOT NULL,
+  `claim_timestamp` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `revoked` tinyint(1) NOT NULL DEFAULT '0',
+  `expires` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`project_invite_id`),
+  UNIQUE KEY `project_invite_id_uindex` (`project_invite_id`),
+  UNIQUE KEY `project_invite_code_uindex` (`invite_code`),
+  KEY `project_invite_project_id_fk` (`project_id`),
+  CONSTRAINT `project_invite_project_id_fk` FOREIGN KEY (`project_id`) REFERENCES `project` (`project_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Mechanism for inviting users to become members of a project.';
+
+
+
 # Dump of table project_member
 # ------------------------------------------------------------
 
@@ -843,25 +858,6 @@ VALUES
 UNLOCK TABLES;
 
 
-# Dump of table user_vcs_credential
-# ------------------------------------------------------------
-
-DROP TABLE IF EXISTS `user_vcs_credential`;
-
-CREATE TABLE `user_vcs_credential` (
-  `user_id` int(11) NOT NULL,
-  `vcs_id` int(11) NOT NULL,
-  `user_vcs_credential_id` int(11) NOT NULL,
-  KEY `user_vcs_credential_user_id_fk` (`user_id`),
-  KEY `user_vcs_credential_vcs_id_fk` (`vcs_id`),
-  KEY `user_vcs_credential_credential_id_fk` (`user_vcs_credential_id`),
-  CONSTRAINT `user_vcs_credential_credential_id_fk` FOREIGN KEY (`user_vcs_credential_id`) REFERENCES `credential` (`credential_id`),
-  CONSTRAINT `user_vcs_credential_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`),
-  CONSTRAINT `user_vcs_credential_vcs_id_fk` FOREIGN KEY (`vcs_id`) REFERENCES `vcs` (`vcs_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Mapping of user credentials for a VCS instance.';
-
-
-
 # Dump of table variable
 # ------------------------------------------------------------
 
@@ -916,6 +912,29 @@ VALUES
 
 /*!40000 ALTER TABLE `vcs` ENABLE KEYS */;
 UNLOCK TABLES;
+
+
+# Dump of table vcs_account
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `vcs_account`;
+
+CREATE TABLE `vcs_account` (
+  `vcs_account_id` int(11) NOT NULL AUTO_INCREMENT,
+  `vcs_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `vcs_user_id` varchar(255) DEFAULT NULL,
+  `vcs_user_credential_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`vcs_account_id`),
+  UNIQUE KEY `vcs_account_id_uindex` (`vcs_account_id`),
+  KEY `vcs_account_vcs_id_fk` (`vcs_id`),
+  KEY `vcs_account_user_id_fk` (`user_id`),
+  KEY `vcs_account_credential_id_fk` (`vcs_user_credential_id`),
+  CONSTRAINT `vcs_account_credential_id_fk` FOREIGN KEY (`vcs_user_credential_id`) REFERENCES `credential` (`credential_id`),
+  CONSTRAINT `vcs_account_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`),
+  CONSTRAINT `vcs_account_vcs_id_fk` FOREIGN KEY (`vcs_id`) REFERENCES `vcs` (`vcs_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Models a user account on a particular VCS instance.';
+
 
 
 # Dump of table vcs_type
