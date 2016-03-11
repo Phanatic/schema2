@@ -1211,35 +1211,58 @@ paths:
             description: Successful response with a stream of artifacts.
 
 
-
-  ######################### /builds/{buildId} #########################
-  '/builds/{buildId}':
+  ######################### /builds #########################
+  '/builds':
 
     get:
-      summary: Gets the build specified by `buildId`
-      description: |
-        Get the build specified in the request params.
-        If build with specified id not found, returns 404.
-      operationId: getBuild
+      tags:
+        - Build
+      summary: List builds, filtering by project_id.
+      operationId: get_builds
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: project_id
+          in: query
+          description: Project id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: Array of `Build` objects, may be empty.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Build'
+
+
+
+  ######################### /builds/{build_id} #########################
+  '/builds/{build_id}':
+
+    get:
+      tags:
+        - Build
+      summary: Gets the specified build.
+      operationId: get_build
       consumes:
         - application/json
       produces:
         - application/json
       
       parameters:
-        - name: buildId
+        - name: build_id
           in: path
-          description: The build id for the build we want to get.
+          description: Build id.
           required: true
           type: integer
-          format: int32put
-
-      
+          format: int32
       responses:
-        
         200:
-          description: Build found.
-          
+          description: Build object.
           schema:
             $ref: '#/definitions/Build'
         404:
@@ -1251,37 +1274,34 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
 
-    put:
-      summary: Update the status and/or details of the specified build.
-      description: |
-        Update a new build per the request params and return 200.
-        If failed to update return 500.
-      operationId: updateBuild
+    delete:
+      tags:
+        - Build
+      summary: Delete the specified build.
+      operationId: delete_build
       consumes:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
-        - name: buildId
+        - name: build_id
           in: path
-          description: The build id to update.
+          description: Build id.
           required: true
           type: integer
           format: int32
-
-        - name: build
-          in: body
-          description: The build JSON to post.
-          schema:
-            $ref: '#/definitions/Build'
-          required: true
-
-      
       responses:
-        
-        200:
-          description: Updates a build.
+        204:
+          description: Build deleted.
+        404:
+          description: Build not found.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
 
 
   '/builds/{buildId}/artifacts':
@@ -1631,115 +1651,13 @@ paths:
 
 
   
-  '/projects/{projectId}/builds':
-
-    get:
-      summary: Get the builds associated with the project.
-      description: |
-        Get the builds associated with the project specified in the request params.
-        If not build are found, returns an empty JSON array.
-      operationId: getBuildsForProject
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      
-      parameters:
-        - name: projectId
-          in: path
-          description: The project id to list builds for.
-          required: true
-          type: integer
-          format: int32
-      
-      responses:
-        
-        200:
-          description: Successful response with a listing of builds.
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Build'
 
 
-    post:
-      summary: Create a new build per the request params.
-      description: |
-        Create a new build per the request params and return 201.
-        If failed to create return 500.
-      operationId: createBuild
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: projectId
-          in: path
-          description: The project id to create build for.
-          required: true
-          type: integer
-          format: int32
-
-        - name: build
-          in: body
-          description: The build JSON to post.
-          schema:
-            $ref: '#/definitions/Build'
-          required: true
-
-      
-      responses:
-        
-        201:
-          description: Creates a new build.
-          
-          schema:
-            $ref: '#/definitions/Build'
 
 
-  '/projects/{projectId}/start_build':
-
-    post:
-      summary: Start a new build for a project.
-      description: |
-        Start the build process for the specified project.
-      operationId: startBuild
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      
-      parameters:
-        - name: projectId
-          in: path
-          description: The project id to start build for.
-          required: true
-          type: integer
-          format: int32
-
-        - name: commitSha # Why is this named both commitSha and commitHash in various places?
-          in: body
-          description: The commitSha.
-          required: true # commitSha should be optional? If not hash provided, CREST should retrieve the most recent one.
-          schema:
-            type: object
-            required:
-              - commitHash
-            properties:
-              commitHash:
-                type: string
 
 
-      
-      responses:
-        
-        201:
-          description: Build started.
-          schema:
-            $ref: '#/definitions/Build'
-        
-        500:
-          description: Failed to start the build.
+
 
 
   '/projects/{projectId}/deployments':
@@ -2467,7 +2385,7 @@ definitions:
     required:
       - buildId
       - projectId
-      - buildTrigger
+      - buildTriggerId
       - result
       - resultMessage
       - created
@@ -2480,8 +2398,10 @@ definitions:
         type: integer
         format: int32
         description: The (internal) id of the project the build is associated with.
-      buildTrigger:
-        $ref: '#/definitions/BuildTrigger' # REVISIT: convert to just an id?
+      buildTriggerId:
+        type: integer
+        format: int32
+        description: The (internal) id of the project the build is associated with.
       result:
         type: string
         description: Result of the build process.
@@ -2493,8 +2413,6 @@ definitions:
         type: string
         description: Build creation timestamp.
         format: date-time
-      deployment:
-        $ref: '#/definitions/Deployment'
 
 
 
@@ -2591,7 +2509,49 @@ definitions:
           description: The commit reference to build from (e.g. a Git commitSha, or a SVN revision).
 
 
-
+  ############## BuildEvent ##############
+  BuildEvent:
+    type: object
+    description: |
+      Models a build event.
+    required:
+      - build_event_id
+      - build_id
+      - event_name
+      - result
+      - started
+      - finished
+    properties:
+      build_event_id:
+        type: integer
+        format: int32
+        description: Build event id.
+      build_id:
+        type: integer
+        format: int32
+        description: Build id.
+      event_name:
+        type: string
+        description: Event name.
+      result:
+        type: string
+        description: Result of the build process.
+        enum: ["PENDING", "SUCCESS", "FAILURE"]
+      message:
+        type: string
+        description: Message associated with the build event.
+      started:
+        type: string
+        description: Build event start timestamp.
+        format: date-time
+      finished:
+        type: string
+        description: Build event start timestamp.
+        format: date-time
+      artifact_id:
+        type: integer
+        format: int32
+        description: The id of the artifact produced by this build event.
 
   ############## artifact ##############
   Artifact:
@@ -2956,25 +2916,6 @@ definitions:
         description: The user creation timestamp.
 
 
-  ############## ProjectMember ##############
-  ProjectMember:
-    description: |
-      A member (user) of a project. Inherits from User.
-    allOf:
-    - $ref: '#/definitions/User'
-    - type: object
-      required:
-        - projectId
-        - isOwner
-      properties:
-        projectId:
-          type: integer
-          format: int32
-          description: The id of the project that the user is a member of.
-        isOwner:
-          type: boolean
-          description: |
-            `TRUE` if the member is an owner of the project, `FALSE` otherwise.
 
 
   ############## VcsAccount ##############
