@@ -23,3 +23,8 @@ Load the associated [code_engine.sql](code_engine.sql) file into MySQL, or view 
     * Or should envs be associated with a project only via a deployment instance?
 
 * For polymorphic objects, swagger-codegen doesn't generate the struct with fields in the swagger source order. Need to open a bug.
+
+* Need to go through swagger and do hygiene:
+   * Consistent use of snake_case (per GitHub, Twitter, Google, etc.)
+   * Remove any old unused operations
+   * Standardize error responses
