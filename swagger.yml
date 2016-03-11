@@ -513,6 +513,446 @@ paths:
     # FIXME: need to add PUT/PATCH
 
 
+
+  ######################### /repos #########################
+  '/repos':
+
+    post:
+      tags:
+        - Repo
+      summary: Add a `Repo` instance.
+      description: |
+        Add a Repo instance, such as `hpcloud/hce-cli`
+      operationId: add_repo
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: repo
+          in: body
+          description: The `Repo` to add.
+          schema:
+            $ref: '#/definitions/Repo'
+          required: true
+      responses:
+        201:
+          description: Item added.
+          schema:
+            $ref: '#/definitions/Repo'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    get:
+      tags:
+        - Repo
+      summary: List `Repo` instances.
+      description: |
+        List the `Repo` instances.
+      operationId: get_repos
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Array of Repo instances.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Repo'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  ######################### /repos/{repo_id} #########################
+  '/repos/{repo_id}':
+    delete:
+      tags:
+        - Repo
+      summary: Remove the specified Repo.
+      operationId: remove_repo
+      produces:
+        - application/json
+      parameters:
+        - name: repo_id
+          in: path
+          description: The (internal) `Repo` id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+          204:
+            description: Item removed.
+          404:
+            description: Item with specified id not found.
+
+    get:
+      tags:
+        - Repo
+      summary: Get the `Repo` specified in the request.
+      operationId: get_repo
+      produces:
+        - application/json
+      parameters:
+        - name: repo_id
+          in: path
+          description: The (internal) item id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: The `Repo` instance.
+          schema:
+            $ref: '#/definitions/Repo'
+        404:
+          description: Item with specified id not found.
+
+    # FIXME: need to add PUT/PATCH
+
+
+
+  ######################### /projects #########################
+  '/projects':
+    post:
+      tags:
+        - Project
+      summary: Create a new project.
+      description: |
+        Create a new `Project`. The newly created `Project` will initially not have any
+        members or owners.
+      operationId: create_project
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: project
+          in: body
+          description: The project to create.
+          schema:
+            $ref: '#/definitions/Project'
+          required: true
+
+      responses:
+        201:
+          description: Newly created project.
+          schema:
+            $ref: '#/definitions/Project'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    get:
+      tags:
+        - Project
+      summary: Get the projects that the user is a member of.
+      operationId: get_projects_for_user
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: user_id
+          in: query
+          description: The (internal) user id to get projects for.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: Array of `Project` objects.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Project'
+
+  ######################### /projects/{project_id} #########################
+  '/projects/{project_id}':
+
+    get:
+      tags:
+        - Project
+      summary: |
+        Get the specified instance.
+      operationId: get_project
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: project_id
+          in: path
+          description: The id of the `Project` to get.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: The `Project` instance.
+          schema:
+            $ref: '#/definitions/Project'
+        404:
+          description: The specified instance is not found.
+
+    put:
+      tags:
+        - Project
+      summary: Update the specified `Project`.
+      description: |
+        Update the specified `Project` and return the updated `Project` instance.
+      operationId: update_project
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: project_id
+          in: path
+          description: |
+            The id of the `Project` instance.
+          required: true
+          type: integer
+          format: int32
+        - name: project
+          required: true
+          in: body
+          description: |
+            The `Project` instance (with updated values).
+          schema:
+            $ref: '#/definitions/Project'
+      responses:
+        200:
+          description: |
+            The updated `Project` instance.
+          schema:
+            $ref: '#/definitions/Project'
+        default:
+          description: |
+            Failed to update the `Project` instance.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    delete:
+      tags:
+        - Project
+      summary: |
+        Delete the specified `Project` instance.
+      operationId: delete_project
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: project_id
+          in: path
+          description: |
+            The id of the `Project` instance to delete.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        204:
+          description: |
+            `Project` instance deleted.
+        default:
+          description: |
+            Failed to delete the `Project` instance.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+
+  ######################### /projects/{project_id}/members #########################
+  '/projects/{project_id}/members':
+
+    get:
+      tags:
+        - Project
+      summary: Get the project members.
+      description: Get all project members (including project owners).
+      operationId: get_project_members
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: project_id
+          in: path
+          description: The instance id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: |
+            An array of `User` objects, which may be empty.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+        404:
+          description: The specified instance is not found.
+
+    post:
+      tags:
+        - Project
+      summary: Add a member (user) to a project.
+      operationId: add_member
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: project_id
+          in: path
+          description: The project id.
+          required: true
+          type: integer
+          format: int32
+        - name: user_id
+          in: body
+          description: The user id.
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        201:
+          description: Member added.
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    delete:
+      tags:
+        - Project
+      summary: Remove a member (user) from a project.
+      operationId: remove_member
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: project_id
+          in: path
+          description: The project id.
+          required: true
+          type: integer
+          format: int32
+        - name: user_id
+          in: body
+          description: The user id.
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        201:
+          description: Member removed.
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+  ######################### /projects/{project_id}/owners #########################
+  '/projects/{project_id}/owners':
+
+    get:
+      tags:
+        - Project
+      summary: Get project owners.
+      description: Get the project owners (excluding non-owner members).
+      operationId: get_project_owners
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: project_id
+          in: path
+          description: The project id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: |
+            An array of `User` objects, which may be empty.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+        404:
+          description: The specified instance is not found.
+
+    post:
+      tags:
+        - Project
+      summary: Add an owner (user) for a project.
+      operationId: add_owner
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: project_id
+          in: path
+          description: The project id.
+          required: true
+          type: integer
+          format: int32
+        - name: user_id
+          in: body
+          description: The user id.
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        201:
+          description: Owner added.
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    delete:
+      tags:
+        - Project
+      summary: Remove an owner (user) from a project.
+      operationId: remove_owner
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: project_id
+          in: path
+          description: The project id.
+          required: true
+          type: integer
+          format: int32
+        - name: user_id
+          in: body
+          description: The user id.
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        201:
+          description: Owner removed.
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
   ######################### /artifacts/{artifactId} #########################
   '/artifacts/{artifactId}':
     # This is a HTTP operation
@@ -602,7 +1042,7 @@ paths:
             description: Successful response with a stream of artifacts.
 
 
-  '/builds/{buildId}/':
+  '/builds/{buildId}':
     # This is a HTTP operation
     get:
       summary: Gets the build specified by `buildId`
@@ -926,7 +1366,7 @@ paths:
 
 
   # This is the path endpoint, with a variable sub
-  '/notificationtargets/{notificationTargetId}/':
+  '/notificationtargets/{notificationTargetId}':
     # This is a HTTP operation
     get:
       summary: Get the notification target specified in the request.
@@ -959,106 +1399,9 @@ paths:
           description: Notification taget not found.
 
 
-  '/projects/{projectId}/':
-
-    get:
-      summary: Get the project specified by `projectId`.
-      description: |
-        Get the project specified in the request. If the
-        item is not found, return a `404`.
-      operationId: getProject
-      consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
-      produces:
-        - application/json
-      # This is array of GET operation parameters:
-      parameters:
-        - name: projectId
-          in: path
-          description: The id of the project to get.
-          required: true
-          type: integer
-          format: int32
-      # Expected responses for this operation:
-      responses:
-        # Response code
-        200:
-          description: Successful response with a `project` object
-          schema:
-            $ref: '#/definitions/Project'
-        # Response code
-        404:
-          description: The specified project is not found.
-
-    put:
-      summary: Update the project specified by `projectId`.
-      description: |
-        Update the specified project and return the updated project object.
-      operationId: updateProject
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: projectId
-          in: path
-          description: The id of the project.
-          required: true
-          type: integer
-          format: int32
-
-        - name: project
-          required: true
-          in: body
-          description: The project object.
-          schema:
-            $ref: '#/definitions/Project'
-
-      # Expected responses for this operation:
-      responses:
-        # Response code
-        200:
-          description: The updated project.
-          schema:
-            $ref: '#/definitions/Project'
-        # Response code
-        default:
-          description: Failed to update the project.
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-
-    delete:
-      summary: Delete the project specified by `projectId`.
-      description: |
-        Delete the project referenced in the request.
-        If the project is not found, return `404`.
-      operationId: deleteProject
-      consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed.
-      produces:
-        - application/json
-      # This is array of GET operation parameters:
-      parameters:
-        - name: projectId
-          in: path
-          description: The id of the project to delete.
-          required: true
-          type: integer
-          format: int32
-      # Expected responses for this operation:
-      responses:
-        # Response code
-        204:
-          description: Successfully deleted.
-        # Response code
-        404:
-          description: When environment with specified id is not found or there are projects using it.
-        default:
-          description: Unexpected error.
-
 
   # This is the path endpoint, with a variable sub
-  '/projects/{projectId}/builds/':
+  '/projects/{projectId}/builds':
     # This is a HTTP operation
     get:
       summary: Get the builds associated with the project.
@@ -1435,7 +1778,7 @@ paths:
 
 
   # This is the path endpoint, with a variable sub
-  '/projects/{projectId}/notificationtargets/':
+  '/projects/{projectId}/notificationtargets':
     # This is a HTTP operation
     get:
       summary: Get the set of notification targets associated with the project specified in the request.
@@ -1505,7 +1848,7 @@ paths:
           description: Failed to creates a new notification target.
 
 
-  '/targets/{targetId}/':
+  '/targets/{targetId}':
     # This is a HTTP operation
     get:
       summary: Get the deployment environment/target specified by `targetId`.
@@ -1603,7 +1946,7 @@ paths:
           description: Successfully deleted.
 
 
-  '/targets/{targetId}/projects/':
+  '/targets/{targetId}/projects':
     # This is a HTTP operation
     get:
       summary: Get the projects associated with the environment specified by `targetId`.
@@ -1644,7 +1987,7 @@ paths:
 
 
   # This is the path endpoint, with a variable sub
-  '/types/notificationtargets/':
+  '/types/notificationtargets':
     # This is a HTTP operation
     get:
       summary: Get the set of Notification Target types.
@@ -1718,7 +2061,7 @@ paths:
 
 
   # This is the path endpoint, with a variable sub
-  '/users/{userId}/':
+  '/users/{userId}':
     # This is a HTTP operation
     get:
       summary: Returns the HelionCE user with the specified ID.
@@ -1818,72 +2161,12 @@ paths:
             description: Succefully deleted.
 
 
-  '/users/{userId}/projects/': # Note: The trailing slash is necessary (at least in this case)
-    get:
-      summary: Get the projects owned by the user.
-      description: |
-        Get the list of projects that the specified user is an owner of.
-        If there are no such projects, return an empty list.
-      operationId: getProjectsForUser
-      consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
-      produces:
-        - application/json
-      # This is array of GET operation parameters:
-      parameters:
-        - name: userId
-          in: path
-          description: The user id to list projects for.
-          required: true
-          type: integer
-          format: int32
-      # Expected responses for this operation:
-      responses:
-        # Response code
-        200:
-          description: Successful response with a listing of user projects.
-          # A schema describing the response object.
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Project'
-
-    post:
-      summary: Create a new project
-      description: |
-        Create a new project for the specified user using the values in the payload.
-      operationId: createProject
-      consumes:
-        - application/json # This operation doesn't actually consume anything, this should be removed?
-      produces:
-        - application/json
-      # This is array of GET operation parameters:
-      parameters:
-        - name: userId
-          in: path
-          description: The user id to create the project for.
-          required: true
-          type: integer
-          format: int32
-
-        - name: project
-          in: body
-          description: The project JSON to post.
-          schema:
-            $ref: '#/definitions/Project'
-          required: true
-
-      # Expected responses for this operation:
-      responses:
-        # Response code
-        201:
-          description: Successful response with details of the newly created project.
-          # A schema describing the response object.
-          schema:
-            $ref: '#/definitions/Project'
 
 
-  '/users/{userId}/targets/':
+
+
+
+  '/users/{userId}/targets':
 
     get:
       summary: Get the set of deployment environments/targets associated with the user specified by `userId`.
@@ -1953,7 +2236,7 @@ paths:
 
 
   # This is the path endpoint, with a variable sub
-  '/users/github/{userId}/':
+  '/users/github/{userId}':
     # This is a HTTP operation
     get:
       summary: Returns the GitHub user with the specified ID.
