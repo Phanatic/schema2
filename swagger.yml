@@ -60,6 +60,7 @@ paths:
 
 
   ######################### /auth/credentials/{credentialId} #########################
+  ## Is this going to return plaintext passwords?
   '/auth/credentials/{credentialId}':
     delete:
       tags:
@@ -114,6 +115,8 @@ paths:
           description: Unexpected error.
           schema:
             $ref: '#/definitions/ErrorResponse'
+
+    # should list be plural? Like, GET:/user/5 = single user, GET:/users = list of users.
 
     get:
       tags:
@@ -184,7 +187,7 @@ paths:
         404:
           description: Item with specified id not found.
 
-    # FIXME: need to add PUT/PATCH
+    # FIXME: need to add PUT/PATCH ? (for update?)
 
 
   ######################### /vcs/account #########################
@@ -578,6 +581,8 @@ paths:
 ######################### /containers/build_containers #########################
   '/containers/build_containers':
 
+    # Is this too prescriptive? Should it be /containers/?taskType=build or something more flexible?
+
     post:
       tags:
         - Container
@@ -779,6 +784,7 @@ paths:
 
   ######################### /projects #########################
   '/projects':
+    # this will need to support pagination
     post:
       tags:
         - Project
@@ -938,12 +944,13 @@ paths:
 
   ######################### /projects/{project_id}/members #########################
   '/projects/{project_id}/members':
-
+    # pagination
+    # filtering & searching (such as matching email address, etc)
     get:
       tags:
         - Project
       summary: Get the project members.
-      description: Get all project members (including project owners).
+      description: Get *all* project members (including project owners).
       operationId: get_project_members
       consumes:
         - application/json
@@ -1137,7 +1144,7 @@ paths:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
         - name: artifactId
           in: path
@@ -1145,12 +1152,12 @@ paths:
           required: true
           type: integer
           format: int32
-      
+
       responses:
-          
+
           404:
             description: Artifact with specified id is not found.
-          
+
           204:
             description: Artifact succefully deleted.
 
@@ -1166,7 +1173,7 @@ paths:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
         - name: artifactId
           in: path
@@ -1174,12 +1181,12 @@ paths:
           required: true
           type: integer
           format: int32
-      
+
       responses:
-        
+
         200:
           description: Successful response an artifact.
-          
+
           schema:
             $ref: '#/definitions/Artifact'
         404:
@@ -1196,7 +1203,7 @@ paths:
           - application/json
         produces:
           - application/json
-        
+
         parameters:
           - name: artifactId
             in: path
@@ -1204,16 +1211,16 @@ paths:
             required: true
             type: integer
             format: int32
-        
+
         responses:
-          
+
           200:
             description: Successful response with a stream of artifacts.
 
 
   ######################### /builds #########################
   '/builds':
-
+    # this will need to support pagination, and filters (build state etc).
     get:
       tags:
         - Build
@@ -1252,7 +1259,7 @@ paths:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
         - name: build_id
           in: path
@@ -1304,6 +1311,13 @@ paths:
             $ref: '#/definitions/ErrorResponse'
 
 
+  # Express 4 makes this a bit trickier
+  # It would be much easier to implement /artifacts?buildId=<buildId>
+  # Having /build/<id>/logs is ok, unlike artifacts, because /logs isn't 'mounted' on any other base paths.
+  # This is because in express 4, the router chunks paths, and sees '/builds' and routes to builds controller, which will
+  # then see './artifacts' and need to route to artifacts controller, or we end up with artifacts logic in two controllers.
+  # Another solution would be to separate our endpoint-handlers and actual business logic, currently its all bundled
+  # into big controller objects.
   '/builds/{buildId}/artifacts':
     get:
       summary: Get the set of artifacts associated with the build specified in the request.
@@ -1315,7 +1329,7 @@ paths:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
         - name: buildId
           in: path
@@ -1323,12 +1337,12 @@ paths:
           required: true
           type: integer
           format: int32
-      
+
       responses:
-        
+
         200:
           description: Successful response with a listing of artifacts can be empty.
-          
+
           schema:
             type: array
             items:
@@ -1344,7 +1358,7 @@ paths:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
         - name: buildId
           in: path
@@ -1360,17 +1374,18 @@ paths:
             $ref: '#/definitions/Artifact'
           required: true
 
-      
+
       responses:
-        
+
         201:
           description: Successful response with details of the newly created post deployment.
-          
+
           schema:
             $ref: '#/definitions/Artifact'
 
 
   '/builds/{buildId}/workspace':
+    # I think this is going away, no?
     get:
       summary: Download the workspace specified in the request params.
       description: |
@@ -1381,7 +1396,7 @@ paths:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
         - name: buildId
           in: path
@@ -1389,14 +1404,15 @@ paths:
           required: true
           type: integer
           format: int32
-      
+
       responses:
-        
+
         200:
           description: Successful response with a stream of of workspace.
 
 
   '/builds/{buildId}/logs/{type}/upload':
+    # By type, do you mean 'build/test/deploy'? This also feels very prescriptive.
     post:
       summary: Uploads a log.
       description: |
@@ -1407,7 +1423,7 @@ paths:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
         - name: buildId
           in: path
@@ -1425,17 +1441,18 @@ paths:
       #   in: body
       #   description: The log. # what is the schema for this?
       #   required: true
-      
+
       responses:
-        
+
         200:
           description: Successful response with artifact object.
-          
+
           schema:
             $ref: '#/definitions/Artifact'
 
 
   '/builds/{buildId}/workspace/upload':
+    # again with the going away bit (the less code i have to maintain, the better :D)
     post:
       summary: Uploads a workspace.
       description: |
@@ -1446,7 +1463,7 @@ paths:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
         - name: buildId
           in: path
@@ -1459,12 +1476,12 @@ paths:
       #   in: body
       #   description: The log. # what is the schema for this?
       #   required: true
-      
+
       responses:
-        
+
         200:
           description: Successful response with artifact object.
-          
+
           schema:
             $ref: '#/definitions/Artifact'
 
@@ -1528,7 +1545,8 @@ paths:
 
   ######################### /builds/events #########################
   '/builds/events':
-
+    # are events like steps?
+    # does each event have a log?
     post:
       tags:
         - Build
@@ -1715,7 +1733,7 @@ paths:
             description: Removed deployment.
           default:
             description: Failed to remove deployment.
-          
+
 
 
 
@@ -1862,7 +1880,7 @@ paths:
             $ref: '#/definitions/PostDeployAction'
           required: true
       responses:
-        
+
         201:
           description: Created PostDeployAction.
           schema:
@@ -1915,7 +1933,7 @@ paths:
           description: Deleted PostDeployAction.
         default:
           description: Failed to delete PostDeployAction.
-            
+
 
 
   ######################### /post_deploy_actions/stormrunner/connect #########################
@@ -1954,7 +1972,7 @@ paths:
           description: When user is not authenticated in storm runner.
 
 
-  
+
 
 
 
@@ -1966,7 +1984,8 @@ paths:
 
   ######################### /users #########################
   '/users':
-
+    # Is there really a use case to list all users? There could be many, and this would need pagination!
+    # should this just return the currently authed user or something? (I'm not really a fan of that).
     get:
       tags:
         - User
@@ -1997,7 +2016,7 @@ paths:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
        - name: user
          in: body
@@ -3059,6 +3078,8 @@ definitions:
 
 
   ############## ErrorResponse ##############
+  # Express 4 allows us to way better handle generic error formats, YAY!
+  # These will all be 500 based errors, yes?
   ErrorResponse:
     type: object
     description: |
@@ -3071,7 +3092,7 @@ definitions:
         type: string
         description: The API version, e.g. `v1`.
       status:
-        type: string
+        type: string #int?
         description: The HTTP status code.
       message:
         type: string
@@ -3079,5 +3100,3 @@ definitions:
       log:
         type: string
         description: Any additional error information, such as log entries, stack trace, etc. Likely to be turned off in production environments.
-
-
