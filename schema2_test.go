@@ -131,13 +131,45 @@ func all_test() {
 	log.Println(repos)
 
 
+
+	// Deployment targets (Environments)!
+
+	deploymentApi := hce.NewDeploymentApi()
+
+	targetCredential, _ := generateCredential()
+	defer cleanupCredential(targetCredential)
+
+
+	deploymentTarget := hce.CloudFoundryDeploymentTarget{nil, "https://cf1.example.com", "CloudFoundryDeploymentTarget", "HPCloud", user.UserId, targetCredential.CredentialId, "This is a really swell env", "My First Environment", "my space" }
+
+	deploymentTarget, _ = deploymentApi.AddDeploymentTarget(deploymentTarget)
+	defer deploymentApi.RemoveDeploymentTarget(deploymentTarget.TargetId)
+	log.Println(deploymentTarget)
+
+	deploymentTarget, _ = deploymentApi.GetDeploymentTarget(deploymentTarget.TargetId)
+	log.Println(deploymentTarget)
+
+	// Get all envs
+	deploymentTargets, _ := deploymentApi.GetDeploymentTargets(nil)
+	log.Println(deploymentTargets)
+
+	// Get envs that a user has access to
+	deploymentTargets, _ = deploymentApi.GetDeploymentTargets(user.UserId)
+	log.Println(deploymentTargets)
+
+	deploymentTarget.Label = "My updated environment"
+	deploymentTarget, _ = deploymentApi.UpdateTarget(deploymentTarget.TargetId, deploymentTarget)
+	log.Println(deploymentTarget)
+
+
+
 	// Create a project
 	projectApi := hce.NewProjectApi()
 
 	repoCredential, _ := generateCredential()
 	defer cleanupCredential(repoCredential)
 
-	project := hce.Project{nil, "My First Project", ghRepo.RepoId, repoCredential.CredentialId, nil}
+	project := hce.Project{nil, "My First Project", ghRepo.RepoId, repoCredential.CredentialId, deploymentTarget.TargetId, nil}
 	project, _ = projectApi.CreateProject(project)
 	log.Println(project)
 	defer projectApi.DeleteProject(project.ProjectId)
@@ -174,42 +206,6 @@ func all_test() {
 	stormrunnerTask := hce.PipelineTask{nil, "com.hpe.stormrunner.test", project.ProjectId, "POST_DEPLOY", stormrunnerConfig, stormrunnerCredential}
 	stormrunnerTask, _ = projectApi.AddPipelineTask(stormrunnerTask)
 	log.Println(stormrunnerTask)
-
-
-	// Deployment targets (Environments)!
-
-	deploymentApi := hce.NewDeploymentApi()
-
-	targetCredential, _ := generateCredential()
-	defer cleanupCredential(targetCredential)
-
-
-	deploymentTarget := hce.CloudFoundryDeploymentTarget{nil, "https://cf1.example.com", "CloudFoundryDeploymentTarget", "HPCloud", user.UserId, targetCredential.CredentialId, "This is a really swell env", "My First Environment", "my space" }
-
-	deploymentTarget, _ = deploymentApi.AddDeploymentTarget(deploymentTarget)
-	defer deploymentApi.RemoveDeploymentTarget(deploymentTarget.TargetId)
-	log.Println(deploymentTarget)
-
-	deploymentTarget, _ = deploymentApi.GetDeploymentTarget(deploymentTarget.TargetId)
-	log.Println(deploymentTarget)
-
-	// Get all envs
-	deploymentTargets, _ := deploymentApi.GetDeploymentTargets(nil)
-	log.Println(deploymentTargets)
-
-	// Get envs that a user has access to
-	deploymentTargets, _ = deploymentApi.GetDeploymentTargets(user.UserId)
-	log.Println(deploymentTargets)
-
-	deploymentTarget.Label = "My updated environment"
-	deploymentTarget, _ = deploymentApi.UpdateTarget(deploymentTarget.TargetId, deploymentTarget)
-	log.Println(deploymentTarget)
-
-
-	// FIXME: Need to decide the relationship between Project and Environments... is it 1:1, or 1:N ?
-	// if 1:1, then env is a field on Project
-	// if not, then need to map the two... but does that mean that every deployment of a Project
-	// will always be deployed to multiple targets?
 
 
 	// Let's get building!
