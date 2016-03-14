@@ -35,7 +35,7 @@ paths:
       description: |
         Add security credential to the authstore. After this operation, the Credential is still
         unlinked to any entity.
-      operationId: storeCredential
+      operationId: store_credential
       consumes:
         - application/json
       produces:
@@ -59,21 +59,21 @@ paths:
 
 
 
-  ######################### /auth/credentials/{credentialId} #########################
-  '/auth/credentials/{credentialId}':
+  ######################### /auth/credentials/{credential_d} #########################
+  '/auth/credentials/{credential_id}':
     delete:
       tags:
         - Security
       summary: Remove the specified credential from the authstore.
-      operationId: forgetCredential
+      operationId: forget_credential
       consumes:
         - application/json
       produces:
         - application/json
       parameters:
-        - name: credentialId
+        - name: credential_id
           in: path
-          description: The (internal) Credential id.
+          description: The (HCE) Credential id.
           required: true
           type: integer
           format: int32
@@ -138,8 +138,8 @@ paths:
 
 
 
-  ######################### /vcs/{vcsId} #########################
-  '/vcs/{vcsId}':
+  ######################### /vcs/{vcs_id} #########################
+  '/vcs/{vcs_id}':
     delete:
       tags:
         - Vcs
@@ -150,7 +150,7 @@ paths:
       produces:
         - application/json
       parameters:
-        - name: vcsId
+        - name: vcs_id
           in: path
           description: The (HCE) VCS id.
           required: true
@@ -170,17 +170,120 @@ paths:
       produces:
         - application/json
       parameters:
-        - name: vcsId
+        - name: vcs_id
           in: path
-          description: The (internal) item id.
+          description: The (HCE) VCS id.
           required: true
           type: integer
           format: int32
       responses:
         200:
-          description: The VCS instance.
+          description: VCS object.
           schema:
             $ref: '#/definitions/Vcs'
+        404:
+          description: Item with specified id not found.
+
+    # FIXME: need to add PUT/PATCH
+
+
+
+
+
+  ######################### /vcs/repos #########################
+  '/vcs/repos':
+
+    post:
+      tags:
+        - Vcs
+      summary: Add a `Repo` instance.
+      description: |
+        Add a Repo instance, such as `hpcloud/hce-cli`
+      operationId: add_repo
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: repo
+          in: body
+          description: The `Repo` to add.
+          schema:
+            $ref: '#/definitions/Repo'
+          required: true
+      responses:
+        201:
+          description: Item added.
+          schema:
+            $ref: '#/definitions/Repo'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    get:
+      tags:
+        - Vcs
+      summary: List `Repo` instances.
+      description: |
+        List the `Repo` instances.
+      operationId: get_repos
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Array of Repo instances.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Repo'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  ######################### /vcs/repos/{repo_id} #########################
+  '/vcs/repos/{repo_id}':
+    delete:
+      tags:
+        - Vcs
+      summary: Remove the specified Repo.
+      operationId: remove_repo
+      produces:
+        - application/json
+      parameters:
+        - name: repo_id
+          in: path
+          description: The (HCE) `Repo` id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+          204:
+            description: Item removed.
+          404:
+            description: Item with specified id not found.
+
+    get:
+      tags:
+        - Vcs
+      summary: Get the `Repo` specified in the request.
+      operationId: get_repo
+      produces:
+        - application/json
+      parameters:
+        - name: repo_id
+          in: path
+          description: The (HCE) item id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: The `Repo` instance.
+          schema:
+            $ref: '#/definitions/Repo'
         404:
           description: Item with specified id not found.
 
@@ -358,7 +461,7 @@ paths:
         - Container
       summary: |
         Enumeration of Container types, e.g. `DOCKER`, `ROCKET`, etc.
-      operationId: getContainerTypes
+      operationId: get_container_types
       produces:
         - application/json
       responses:
@@ -379,7 +482,7 @@ paths:
       summary: Add a ContainerRegistry instance.
       description: |
         Add (register) a ContainerRegistry instance, such as DockerHub, or a local registry.
-      operationId: addContainerRegistry
+      operationId: add_container_registry
       consumes:
         - application/json
       produces:
@@ -387,7 +490,7 @@ paths:
       parameters:
         - name: registry
           in: body
-          description: The ContainerRegistry to add.
+          description: ContainerRegistry to add.
           schema:
             $ref: '#/definitions/ContainerRegistry'
           required: true
@@ -407,7 +510,7 @@ paths:
       summary: List ContainerRegistry instances.
       description: |
         List the registered ContainerRegistry instances.
-      operationId: getContainerRegistries
+      operationId: get_container_registries
       produces:
         - application/json
       responses:
@@ -428,19 +531,19 @@ paths:
 
 
 
-  ######################### /container/registry/{registryId} #########################
-  '/containers/registries/{registryId}':
+  ######################### /container/registry/{registry_id} #########################
+  '/containers/registries/{registry_id}':
     delete:
       tags:
         - Container
       summary: Remove (unregister) the specified ContainerRegistry.
-      operationId: removeContainerRegistry
+      operationId: remove_container_registry
       produces:
         - application/json
       parameters:
-        - name: registryId
+        - name: registry_id
           in: path
-          description: The (internal) ContainerRegistry id.
+          description: The (HCE) ContainerRegistry id.
           required: true
           type: integer
           format: int32
@@ -454,19 +557,19 @@ paths:
       tags:
         - Container
       summary: Get the ContainerRegistry specified in the request.
-      operationId: getContainerRegistry
+      operationId: get_container_registry
       produces:
         - application/json
       parameters:
-        - name: registryId
+        - name: registry_id
           in: path
-          description: The (internal) item id.
+          description: The (HCE) item id.
           required: true
           type: integer
           format: int32
       responses:
         200:
-          description: The ContainerRegistry instance.
+          description: ContainerRegistry object.
           schema:
             $ref: '#/definitions/ContainerRegistry'
         404:
@@ -484,7 +587,7 @@ paths:
       summary: Add a ContainerImage instance.
       description: |
         Add (register) a ContainerImage instance, such as a Docker image.
-      operationId: addContainerImage
+      operationId: add_container_image
       consumes:
         - application/json
       produces:
@@ -492,13 +595,13 @@ paths:
       parameters:
         - name: image
           in: body
-          description: The ContainerImage to add.
+          description: ContainerImage to add.
           schema:
             $ref: '#/definitions/ContainerImage'
           required: true
       responses:
         201:
-          description: Added container image.
+          description: Added ContainerImage.
           schema:
             $ref: '#/definitions/ContainerImage'
         default:
@@ -512,7 +615,7 @@ paths:
       summary: List ContainerImage instances.
       description: |
         List the registered ContainerImage instances.
-      operationId: getContainerImages
+      operationId: get_container_images
       produces:
         - application/json
       responses:
@@ -528,17 +631,17 @@ paths:
             $ref: '#/definitions/ErrorResponse'
 
 
-  ######################### /containers/images/{imageId} #########################
-  '/containers/images/{imageId}':
+  ######################### /containers/images/{image_id} #########################
+  '/containers/images/{image_id}':
     delete:
       tags:
         - Container
       summary: Remove (unregister) the specified ContainerImage.
-      operationId: removeContainerImage
+      operationId: remove_container_image
       produces:
         - application/json
       parameters:
-        - name: imageId
+        - name: image_id
           in: path
           description: The (HCE) ContainerImage id.
           required: true
@@ -554,19 +657,19 @@ paths:
       tags:
         - Container
       summary: Get the ContainerImage specified in the request.
-      operationId: getContainerImage
+      operationId: get_container_image
       produces:
         - application/json
       parameters:
-        - name: imageId
+        - name: image_id
           in: path
-          description: The (internal) item id.
+          description: The (HCE) image id.
           required: true
           type: integer
           format: int32
       responses:
         200:
-          description: The ContainerImage instance.
+          description: ContainerImage object.
           schema:
             $ref: '#/definitions/ContainerImage'
         404:
@@ -584,7 +687,7 @@ paths:
       summary: Add a BuildContainer instance.
       description: |
         Add (register) a BuildContainer instance, such as a BuildContainer for Java, or nodejs, or PHP, etc.
-      operationId: addBuildContainer
+      operationId: add_build_Container
       consumes:
         - application/json
       produces:
@@ -592,7 +695,7 @@ paths:
       parameters:
         - name: build_container
           in: body
-          description: The BuildContainer to add.
+          description: BuildContainer to add.
           schema:
             $ref: '#/definitions/BuildContainer'
           required: true
@@ -612,7 +715,7 @@ paths:
       summary: List BuildContainer instances.
       description: |
         List the registered BuildContainer instances.
-      operationId: getBuildContainers
+      operationId: get_build_containers
       produces:
         - application/json
       responses:
@@ -628,7 +731,7 @@ paths:
             $ref: '#/definitions/ErrorResponse'
 
 
-  ######################### /containers/build_containers/{containerId} #########################
+  ######################### /containers/build_containers/{container_id} #########################
   '/containers/build_containers/{container_id}':
     delete:
       tags:
@@ -646,7 +749,7 @@ paths:
           format: int32
       responses:
           204:
-            description: Item removed.
+            description: BuildContainer removed.
           404:
             description: Item with specified id not found.
 
@@ -660,7 +763,7 @@ paths:
       parameters:
         - name: container_id
           in: path
-          description: The (internal) item id.
+          description: The (HCE) item id.
           required: true
           type: integer
           format: int32
@@ -675,105 +778,6 @@ paths:
     # FIXME: need to add PUT/PATCH
 
 
-
-  ######################### /repos #########################
-  '/repos':
-
-    post:
-      tags:
-        - Repo
-      summary: Add a `Repo` instance.
-      description: |
-        Add a Repo instance, such as `hpcloud/hce-cli`
-      operationId: add_repo
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: repo
-          in: body
-          description: The `Repo` to add.
-          schema:
-            $ref: '#/definitions/Repo'
-          required: true
-      responses:
-        201:
-          description: Item added.
-          schema:
-            $ref: '#/definitions/Repo'
-        default:
-          description: Unexpected error.
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-
-    get:
-      tags:
-        - Repo
-      summary: List `Repo` instances.
-      description: |
-        List the `Repo` instances.
-      operationId: get_repos
-      produces:
-        - application/json
-      responses:
-        200:
-          description: Array of Repo instances.
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Repo'
-        default:
-          description: Unexpected error.
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-
-
-  ######################### /repos/{repo_id} #########################
-  '/repos/{repo_id}':
-    delete:
-      tags:
-        - Repo
-      summary: Remove the specified Repo.
-      operationId: remove_repo
-      produces:
-        - application/json
-      parameters:
-        - name: repo_id
-          in: path
-          description: The (internal) `Repo` id.
-          required: true
-          type: integer
-          format: int32
-      responses:
-          204:
-            description: Item removed.
-          404:
-            description: Item with specified id not found.
-
-    get:
-      tags:
-        - Repo
-      summary: Get the `Repo` specified in the request.
-      operationId: get_repo
-      produces:
-        - application/json
-      parameters:
-        - name: repo_id
-          in: path
-          description: The (internal) item id.
-          required: true
-          type: integer
-          format: int32
-      responses:
-        200:
-          description: The `Repo` instance.
-          schema:
-            $ref: '#/definitions/Repo'
-        404:
-          description: Item with specified id not found.
-
-    # FIXME: need to add PUT/PATCH
 
 
 
@@ -794,14 +798,14 @@ paths:
       parameters:
         - name: project
           in: body
-          description: The project to create.
+          description: Project to create.
           schema:
             $ref: '#/definitions/Project'
           required: true
 
       responses:
         201:
-          description: Newly created project.
+          description: Created Project.
           schema:
             $ref: '#/definitions/Project'
         default:
@@ -813,7 +817,7 @@ paths:
       tags:
         - Project
       summary: List projects, optionally filtering.
-      description: Get the list of projects, optionally filtering by user membership, and/or environments that the project is associated with.
+      description: Get the list of projects, optionally filtering by user membership, and/or deployment targets that the project is associated with.
       operationId: get_projects
       consumes:
         - application/json
@@ -826,7 +830,7 @@ paths:
           required: false
           type: integer
           format: int32
-        - name: environment_id
+        - name: deployment_target_id
           in: query
           description: Filter the list of projects by whether the project has this environment as a target.
           required: false
@@ -839,6 +843,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Project'
+
+
 
   ######################### /projects/{project_id} #########################
   '/projects/{project_id}':
@@ -856,13 +862,13 @@ paths:
       parameters:
         - name: project_id
           in: path
-          description: The id of the `Project` to get.
+          description: HCE id of the `Project` to get.
           required: true
           type: integer
           format: int32
       responses:
         200:
-          description: The `Project` instance.
+          description: Project object.
           schema:
             $ref: '#/definitions/Project'
         404:
@@ -1029,6 +1035,8 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
 
+
+
   ######################### /projects/{project_id}/owners #########################
   '/projects/{project_id}/owners':
 
@@ -1137,7 +1145,7 @@ paths:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
         - name: artifactId
           in: path
@@ -1145,12 +1153,12 @@ paths:
           required: true
           type: integer
           format: int32
-      
+
       responses:
-          
+
           404:
             description: Artifact with specified id is not found.
-          
+
           204:
             description: Artifact succefully deleted.
 
@@ -1166,7 +1174,7 @@ paths:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
         - name: artifactId
           in: path
@@ -1174,12 +1182,12 @@ paths:
           required: true
           type: integer
           format: int32
-      
+
       responses:
-        
+
         200:
           description: Successful response an artifact.
-          
+
           schema:
             $ref: '#/definitions/Artifact'
         404:
@@ -1196,7 +1204,7 @@ paths:
           - application/json
         produces:
           - application/json
-        
+
         parameters:
           - name: artifactId
             in: path
@@ -1204,20 +1212,20 @@ paths:
             required: true
             type: integer
             format: int32
-        
+
         responses:
-          
+
           200:
             description: Successful response with a stream of artifacts.
 
 
-  ######################### /builds #########################
-  '/builds':
+  ######################### /pipelines/builds #########################
+  '/pipelines/builds':
 
     get:
       tags:
         - Build
-      summary: List builds, filtering by project_id.
+      summary: List builds, optionally filtering by project_id.
       operationId: get_builds
       consumes:
         - application/json
@@ -1240,8 +1248,8 @@ paths:
 
 
 
-  ######################### /builds/{build_id} #########################
-  '/builds/{build_id}':
+  ######################### /pipelines/builds/{build_id} #########################
+  '/pipelines/builds/{build_id}':
 
     get:
       tags:
@@ -1252,7 +1260,7 @@ paths:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
         - name: build_id
           in: path
@@ -1304,31 +1312,27 @@ paths:
             $ref: '#/definitions/ErrorResponse'
 
 
-  '/builds/{buildId}/artifacts':
+  '/pipelines/builds/{build_id}/artifacts':
     get:
       summary: Get the set of artifacts associated with the build specified in the request.
       description: |
         Get the set of artifacts associated with the build specified in the request.
         If there are no artifacts, returns an empty list.
-      operationId: getArtifactsForBuild
+      operationId: get_artifacts_for_build
       consumes:
         - application/json
       produces:
         - application/json
-      
       parameters:
-        - name: buildId
+        - name: build_id
           in: path
           description: The build id to list artifacts for.
           required: true
           type: integer
           format: int32
-      
       responses:
-        
         200:
           description: Successful response with a listing of artifacts can be empty.
-          
           schema:
             type: array
             items:
@@ -1339,38 +1343,33 @@ paths:
       description: |
         Create a new artifact per the request params. and return 201.
         If failed to create returns 500.
-      operationId: createArtifact
+      operationId: add_artifact
       consumes:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
-        - name: buildId
+        - name: build_id
           in: path
-          description: The build id to create artifact for.
+          description: The build id to add artifact for.
           required: true
           type: integer
           format: int32
-
         - name: artifact
           in: body
-          description: The artifact JSON to post.
+          description: Artifact object.
           schema:
             $ref: '#/definitions/Artifact'
           required: true
-
-      
       responses:
-        
         201:
           description: Successful response with details of the newly created post deployment.
-          
           schema:
             $ref: '#/definitions/Artifact'
 
 
-  '/builds/{buildId}/workspace':
+  '/pipelines/builds/{build_id}/workspace':
     get:
       summary: Download the workspace specified in the request params.
       description: |
@@ -1381,22 +1380,22 @@ paths:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
-        - name: buildId
+        - name: build_id
           in: path
           description: The build id to download workspace for.
           required: true
           type: integer
           format: int32
-      
+
       responses:
-        
+
         200:
           description: Successful response with a stream of of workspace.
 
 
-  '/builds/{buildId}/logs/{type}/upload':
+  '/pipelines/builds/{build_id}/logs/{type}/upload':
     post:
       summary: Uploads a log.
       description: |
@@ -1407,9 +1406,9 @@ paths:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
-        - name: buildId
+        - name: build_id
           in: path
           description: The build id to upload log for.
           required: true
@@ -1425,17 +1424,17 @@ paths:
       #   in: body
       #   description: The log. # what is the schema for this?
       #   required: true
-      
+
       responses:
-        
+
         200:
           description: Successful response with artifact object.
-          
+
           schema:
             $ref: '#/definitions/Artifact'
 
 
-  '/builds/{buildId}/workspace/upload':
+  '/pipelines/builds/{build_id}/workspace/upload':
     post:
       summary: Uploads a workspace.
       description: |
@@ -1446,9 +1445,9 @@ paths:
         - application/json
       produces:
         - application/json
-      
+
       parameters:
-        - name: buildId
+        - name: build_id
           in: path
           description: The build id to upload workspa for.
           required: true
@@ -1459,23 +1458,23 @@ paths:
       #   in: body
       #   description: The log. # what is the schema for this?
       #   required: true
-      
+
       responses:
-        
+
         200:
           description: Successful response with artifact object.
-          
+
           schema:
             $ref: '#/definitions/Artifact'
 
-  ######################### /builds/triggers #########################
-  '/builds/triggers':
+  ######################### /pipelines/triggers #########################
+  '/pipelines/triggers':
 
     post:
       tags:
         - Build
-      summary: Trigger a build.
-      operationId: triggerBuild
+      summary: Trigger a pipeline build.
+      operationId: triggerPipelineBuild
       consumes:
         - application/json
       produces:
@@ -1483,29 +1482,29 @@ paths:
       parameters:
         - name: build_trigger
           in: body
-          description: BuildTrigger event.
+          description: PipelineTrigger event.
           schema:
-            $ref: '#/definitions/BuildTrigger'
+            $ref: '#/definitions/PipelineTrigger'
           required: true
 
       responses:
         201:
-          description: Added BuildTrigger.
+          description: Added PipelineTrigger.
           schema:
-            $ref: '#/definitions/BuildTrigger'
+            $ref: '#/definitions/PipelineTrigger'
         default:
           description: Unexpected error.
           schema:
             $ref: '#/definitions/ErrorResponse'
 
-  ######################### /builds/triggers/{trigger_id} #########################
-  '/builds/triggers/{trigger_id}':
+  ######################### /pipelines/triggers/{trigger_id} #########################
+  '/pipelines/triggers/{trigger_id}':
 
     get:
       tags:
         - Build
-      summary: Get the specified build trigger.
-      operationId: get_build_trigger
+      summary: Get the specified pipeline trigger.
+      operationId: get_pipeline_trigger
       consumes:
         - application/json
       produces:
@@ -1513,44 +1512,44 @@ paths:
       parameters:
         - name: trigger_id
           in: path
-          description: BuildTrigger id.
+          description: PipelineTrigger id.
           required: true
           type: integer
           format: int32
       responses:
         200:
-          description: BuildTrigger object.
+          description: PipelineTrigger object.
           schema:
-            $ref: '#/definitions/BuildTrigger'
+            $ref: '#/definitions/PipelineTrigger'
         default:
-          description: Failed to get BuildTrigger.
+          description: Failed to get PipelineTrigger.
 
 
-  ######################### /builds/events #########################
-  '/builds/events':
+  ######################### /pipelines/events #########################
+  '/pipelines/events':
 
     post:
       tags:
         - Build
-      summary: Record a BuildEvent.
-      operationId: build_event_occurred
+      summary: Record a PipelineEvent.
+      operationId: pipeline_event_occurred
       consumes:
         - application/json
       produces:
         - application/json
       parameters:
-        - name: build_event
+        - name: pipeline_event
           in: body
-          description: Build event.
+          description: Pipeline event.
           schema:
-            $ref: '#/definitions/BuildEvent'
+            $ref: '#/definitions/PipelineEvent'
           required: true
 
       responses:
         201:
-          description: Added BuildEvent.
+          description: Added PipelineEvent.
           schema:
-            $ref: '#/definitions/BuildEvent'
+            $ref: '#/definitions/PipelineEvent'
         default:
           description: Unexpected error.
           schema:
@@ -1559,8 +1558,8 @@ paths:
     get:
       tags:
         - Build
-      summary: List build events, optionally filtering by Build id.
-      operationId: get_build_events
+      summary: List pipeline events, optionally filtering by Build id.
+      operationId: get_pipeline_events
       consumes:
         - application/json
       produces:
@@ -1574,22 +1573,22 @@ paths:
           format: int32
       responses:
         200:
-          description: Array of BuildEvent objects. May be empty.
+          description: Array of PipelineEvent objects. May be empty.
           schema:
             type: array
             items:
-            $ref: '#/definitions/BuildEvent'
+              $ref: '#/definitions/PipelineEvent'
         default:
           description: Unexpected error.
 
-  ######################### /builds/events/{event_id} #########################
-  '/builds/events/{event_id}':
+  ######################### /pipelines/events/{event_id} #########################
+  '/pipelines/events/{event_id}':
 
     get:
       tags:
         - Build
-      summary: Get the specified build event.
-      operationId: get_build_event
+      summary: Get the specified pipeline event.
+      operationId: get_pipeline_event
       consumes:
         - application/json
       produces:
@@ -1597,17 +1596,353 @@ paths:
       parameters:
         - name: event_id
           in: path
-          description: BuildEvent id.
+          description: PipelineEvent id.
           required: true
           type: integer
           format: int32
       responses:
         200:
-          description: BuildEvent object.
+          description: PipelineEvent object.
           schema:
-            $ref: '#/definitions/BuildEvent'
+            $ref: '#/definitions/PipelineEvent'
         default:
-          description: Failed to get BuildEvent.
+          description: Failed to get PipelineEvent.
+
+
+
+
+
+
+  ######################### /notifications/targets #########################
+  '/notifications/targets':
+    get:
+      tags:
+        - Notification
+      summary: List notifiction targets, optionally filtering.
+      operationId: get_notification_targets
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: project_id
+          in: query
+          description: The HCE Project id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: Array of NotificationTarget objects.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/NotificationTarget'
+    post:
+      tags:
+        - Notification
+      summary: Add a NotificationTarget (for a project).
+      description: |
+      operationId: add_notification_target
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+
+        - name: notification_target
+          in: body
+          description: NotificationTarget object.
+          schema:
+            $ref: '#/definitions/NotificationTarget'
+          required: true
+      responses:
+        201:
+          description: Added NotificationTarget.
+          schema:
+            $ref: '#/definitions/NotificationTarget'
+        default:
+          description: Unexpected error
+
+
+
+  ######################### /notifications/targets/{notification_target_id} #########################
+  '/notifications/targets/{notification_target_id}':
+
+    get:
+      summary: Get the specified NotificationTarget.
+      operationId: get_notification_target
+      consumes:
+        - application/json
+      produces:
+        - application/json
+
+      parameters:
+        - name: notification_target_id
+          in: path
+          description: NotificationTarget id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: NotifictionTarget object.
+          schema:
+            $ref: '#/definitions/NotificationTarget'
+        404:
+          description: Not found.
+    delete:
+      summary: Remove NotificationTarget.
+      operationId: remove_notification_target
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: notification_target_id
+          in: path
+          description: NotificationTarget id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        204:
+          description: Removed NotificationTarget.
+        default:
+          description: Unexpcted error.
+
+
+
+  ######################### /pipelines/tasks #########################
+  '/pipelines/tasks':
+    get:
+      tags:
+        - Project
+      summary: List the pipeline tasks, optionally filtering by project.
+      operationId: get_pipeline_tasks
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: project_id
+          in: query
+          description: Project id to filter by.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: Array of PipelineTasks. May be empty.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PipelineTask'
+
+    post:
+      tags:
+        - Project
+      summary: Add a pipeline task for a specific project.
+      operationId: add_pipeline_task
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: pipeline_task
+          in: body
+          description: PipelineTask object.
+          schema:
+            $ref: '#/definitions/PipelineTask'
+          required: true
+      responses:
+
+        201:
+          description: Created PipelineTask.
+          schema:
+            $ref: '#/definitions/PipelineTask'
+
+
+  ######################### /pipelines/tasks/{task_id} #########################
+  '/pipelines/tasks/{task_id}':
+    get:
+      tags:
+        - Project
+      summary: Get the specified pipeline task.
+      operationId: get_pipeline_task
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: task_id
+          in: path
+          description: PipelineTask id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: PipelineTask object.
+          schema:
+            $ref: '#/definitions/PipelineTask'
+
+    delete:
+      tags:
+        - Project
+      summary: Remove the specified pipeline task.
+      operationId: remove_pipeline_task
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: task_id
+          in: path
+          description: The PipelineTask id to remove.
+          required: true
+          type: integer
+          format: int32
+
+      responses:
+        204:
+          description: Removed PipelineTask.
+        default:
+          description: Failed to remove PipelineTask.
+
+
+  ######################### /users #########################
+  '/users':
+
+    get:
+      tags:
+        - User
+      summary: List all users.
+      operationId: get_users
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Array of user objects. May be empty.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+        default:
+          description: Unknown error.
+
+
+
+    post:
+      tags:
+        - User
+      summary: Create a user.
+      operationId: create_user
+      consumes:
+        - application/json
+      produces:
+        - application/json
+
+      parameters:
+       - name: user
+         in: body
+         description: User object.
+         schema:
+           $ref: '#/definitions/User'
+         required: true
+      responses:
+        201:
+          description: Newly created user.
+          schema:
+            $ref: '#/definitions/User'
+        default:
+          description: Failed to create the user.
+
+
+
+  ######################### /users/{user_id} #########################
+  '/users/{user_id}':
+
+    get:
+      tags:
+        - User
+      summary: Get the specified user.
+      operationId: get_user
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: user_id
+          in: path
+          description: User id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: User object.
+          schema:
+            $ref: '#/definitions/User'
+        404:
+          description: User not found.
+
+
+    put:
+      tags:
+        - User
+      summary: Update the specified user.
+      operationId: update_user
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: user_id
+          in: path
+          description: User id.
+          required: true
+          type: integer
+          format: int32
+
+        - name: user
+          in: body
+          description: User object (with updated values).
+          schema:
+           $ref: '#/definitions/User'
+          required: true
+      responses:
+        200:
+          description: Updated user object.
+          schema:
+            $ref: '#/definitions/User'
+        default:
+          description: Failed to update the user.
+
+
+    delete:
+      tags:
+        - User
+      summary: Delete the specified user.
+      operationId: delete_user
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: user_id
+          in: path
+          description: User id.
+          required: true
+          type: integer
+          format: int32
+      responses:
+        204:
+          description: User deleted.
+        default:
+          description: Failed to delete user.
 
 
 
@@ -1715,427 +2050,46 @@ paths:
             description: Removed deployment.
           default:
             description: Failed to remove deployment.
-          
 
 
 
-  ######################### /notification_targets #########################
-  '/notification_targets':
-    get:
-      tags:
-        - Notification
-      summary: List notifiction targets, optionally filtering.
-      operationId: get_notification_targets
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: project_id
-          in: query
-          description: The internal project id.
-          required: true
-          type: integer
-          format: int32
-      responses:
-        200:
-          description: Array of NotificationTarget objects.
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/NotificationTarget'
-    post:
-      tags:
-        - Notification
-      summary: Add a NotificationTarget (for a project).
-      description: |
-      operationId: add_notification_target
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-
-        - name: notification_target
-          in: body
-          description: NotificationTarget object.
-          schema:
-            $ref: '#/definitions/NotificationTarget'
-          required: true
-      responses:
-        201:
-          description: Added NotificationTarget.
-          schema:
-            $ref: '#/definitions/NotificationTarget'
-        default:
-          description: Unexpected error
-
-
-
-  ######################### /notification_targets/{notification_target_id} #########################
-  '/notification_targets/{notification_target_id}':
-
-    get:
-      summary: Get the specified NotificationTarget.
-      operationId: get_notification_target
-      consumes:
-        - application/json
-      produces:
-        - application/json
-
-      parameters:
-        - name: notification_target_id
-          in: path
-          description: NotificationTarget id.
-          required: true
-          type: integer
-          format: int32
-      responses:
-        200:
-          description: NotifictionTarget object.
-          schema:
-            $ref: '#/definitions/NotificationTarget'
-        404:
-          description: Not found.
-    delete:
-      summary: Remove NotificationTarget.
-      operationId: deleteNotificationTarget
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: notification_target_id
-          in: path
-          description: NotificationTarget id.
-          required: true
-          type: integer
-          format: int32
-      responses:
-        204:
-          description: Removed NotificationTarget.
-        default:
-          description: Unexpcted error.
-
-
-
-  ######################### /post_deploy_actions #########################
-  '/post_deploy_actions':
-    get:
-      tags:
-        - PostDeploy
-      summary: List the post-deploy actions, optionally filtering by project.
-      operationId: getProjectPostDeployActions
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: project_id
-          in: query
-          description: Project id to filter by.
-          required: true
-          type: integer
-          format: int32
-      responses:
-        200:
-          description: Array of PostDeployActions. May be empty.
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/PostDeployAction'
+  ######################### /deployments/targets #########################
+  '/deployments/targets':
 
     post:
       tags:
-        - PostDeploy
-      summary: Create a post-deploy action
-      operationId: create_post_deploy_action
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: post_deploy_action
-          in: body
-          description: PostDeployAction object.
-          schema:
-            $ref: '#/definitions/PostDeployAction'
-          required: true
-      responses:
-        
-        201:
-          description: Created PostDeployAction.
-          schema:
-            $ref: '#/definitions/PostDeployAction'
-
-
-  ######################### /post_deploy_actions/{post_deploy_action_id} #########################
-  '/post_deploy_actions/{post_deploy_action_id}':
-    get:
-      tags:
-        - PostDeploy
-      summary: Get the post-deploy action specified in the request.
-      operationId: get_post_deploy_action
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: post_deploy_action_id
-          in: path
-          description: PostDeployAction id.
-          required: true
-          type: integer
-          format: int32
-      responses:
-        200:
-          description: PostDeployAction object.
-          schema:
-            $ref: '#/definitions/PostDeployAction'
-
-    delete:
-      tags:
-        - PostDeploy
-      summary: Deletes the PostDeployAction specified in the request.
-      operationId: delete_post_deploy_action
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: post_deploy_action_id
-          in: path
-          description: The pot deployment action id to delete.
-          required: true
-          type: integer
-          format: int32
-
-      responses:
-        204:
-          description: Deleted PostDeployAction.
-        default:
-          description: Failed to delete PostDeployAction.
-            
-
-
-  ######################### /post_deploy_actions/stormrunner/connect #########################
-  '/post_deploy_actions/stormrunner/connect':
-    post:
-      tags:
-        - PostDeploy
-      summary: Connects to storm runner end point.
-      description: |
-        Connects to storm runner end point and returns list of tests.
-        If failed to autheticate it returns 403 and if no tests found return 404.
-        FIXME: This whole operation seems out of place... why is CREST doing this?
-      operationId: connectToStormRunner
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: stormRunnerRequest
-          in: body
-          description: The storm runner request JSON to post.
-          schema:
-            $ref: '#/definitions/StormRunnerRequest'
-          required: true
-      responses:
-        200:
-          description: |
-            Successful response with list of tests.
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/StormRunnerTest'
-        404:
-          description: When tests not were found for the user with given tenanat id.
-        403:
-          description: When user is not authenticated in storm runner.
-
-
-  
-
-
-
-
-
-
-
-
-
-  ######################### /users #########################
-  '/users':
-
-    get:
-      tags:
-        - User
-      summary: List all users.
-      operationId: get_users
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      responses:
-        200:
-          description: Array of user objects. May be empty.
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/User'
-        default:
-          description: Unknown error.
-
-
-
-    post:
-      tags:
-        - User
-      summary: Create a user.
-      operationId: create_user
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      
-      parameters:
-       - name: user
-         in: body
-         description: User object.
-         schema:
-           $ref: '#/definitions/User'
-         required: true
-      responses:
-        201:
-          description: Newly created user.
-          schema:
-            $ref: '#/definitions/User'
-        default:
-          description: Failed to create the user.
-
-
-
-  ######################### /users/{user_id} #########################
-  '/users/{user_id}':
-
-    get:
-      tags:
-        - User
-      summary: Get the specified user.
-      operationId: get_user
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: user_id
-          in: path
-          description: User id.
-          required: true
-          type: integer
-          format: int32
-      responses:
-        200:
-          description: User object.
-          schema:
-            $ref: '#/definitions/User'
-        404:
-          description: User not found.
-
-
-    put:
-      tags:
-        - User
-      summary: Update the specified user.
-      operationId: update_user
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: user_id
-          in: path
-          description: User id.
-          required: true
-          type: integer
-          format: int32
-
-        - name: user
-          in: body
-          description: User object (with updated values).
-          schema:
-           $ref: '#/definitions/User'
-          required: true
-      responses:
-        200:
-          description: Updated user object.
-          schema:
-            $ref: '#/definitions/User'
-        default:
-          description: Failed to update the user.
-
-
-    delete:
-      tags:
-        - User
-      summary: Delete the specified user.
-      operationId: delete_user
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: user_id
-          in: path
-          description: User id.
-          required: true
-          type: integer
-          format: int32
-      responses:
-        204:
-          description: User deleted.
-        default:
-          description: Failed to delete user.
-
-
-
-  ######################### /environments #########################
-  '/environments':
-
-    post:
-      tags:
-        - Environment
-      summary: Add an environment.
+        - Deployment
+      summary: Add a deployment target.
       description: |
         Add (register) a deployment environment (target), such as a CloudFoundry instance.
-      operationId: add_environment
+      operationId: add_deployment_target
       consumes:
         - application/json
       produces:
          - application/json
       parameters:
-        - name: environment
+        - name: deployment_target
           in: body
-          description: Environment object.
+          description: DeploymentTarget object.
           schema:
-            $ref: '#/definitions/Environment'
+            $ref: '#/definitions/DeploymentTarget'
           required: true
       responses:
         201:
-          description: Added environment.
+          description: Added DeploymentTarget.
           schema:
-            $ref: '#/definitions/Environment'
+            $ref: '#/definitions/DeploymentTarget'
         default:
-          description: Failed to add the environment.
+          description: Failed to add the DeploymentTarget.
 
 
     get:
       tags:
-        - Environment
-      summary: List the registered environments, optionally filtering.
+        - Deployment
+      summary: List the registered deployment targets, optionally filtering.
       description: |
-        List the registered environments, optionally filtering by owner user_id.
-      operationId: get_environments
+        List the registered deployment targets, optionally filtering by owner user_id.
+      operationId: get_deployment_targets
       consumes:
         - application/json
       produces:
@@ -2150,70 +2104,70 @@ paths:
       responses:
         200:
           description: |
-            Array of `Environment` objects, which may be empty.
+            Array of `DeploymentTarget` objects, which may be empty.
           schema:
             type: array
             items:
-              $ref: '#/definitions/Environment'
+              $ref: '#/definitions/DeploymentTarget'
         default:
           description: Unknown error.
 
 
 
-  ######################### /environments/{environment_id} #########################
-  '/environments/{environment_id}':
+  ######################### /deployments/targets/{target_id} #########################
+  '/deployments/targets/{target_id}':
 
     get:
       tags:
-        - Environment
+        - Deployment
       summary: Get the specified environment.
-      operationId: get_environment
+      operationId: get_deployment_target
       consumes:
         - application/json
       produces:
         - application/json
       parameters:
-        - name: environment_id
+        - name: target_id
           in: path
-          description: Environment id.
+          description: DeploymentTarget id.
           required: true
           type: integer
           format: int32
       responses:
         200:
-          description: Environment object.
+          description: DeploymentTarget object.
           schema:
-            $ref: '#/definitions/Environment'
+            $ref: '#/definitions/DeploymentTarget'
         404:
-          description: Environment not found.
+          description: DeploymentTarget not found.
 
     put:
       tags:
-        - Environment
-      summary: Update the specified environment.
-      operationId: update_environment
+        - Deployment
+      summary: Update the specified DeploymentTarget.
+      operationId: update_target
       consumes:
         - application/json
       produces:
         - application/json
       parameters:
-        - name: environment_id
+        - name: target_id
           in: path
-          description: Environment id.
+          description: DeploymentTarget id.
           required: true
           type: integer
           format: int32
-        - name: environment
+        - name: deployment_target
           required: true
           in: body
-          description: Environment object.
+          description: DeploymentTarget object.
           schema:
-            $ref: '#/definitions/Environment'
+            $ref: '#/definitions/DeploymentTarget'
       responses:
         200:
-          description: Updated environment.
+          description: Updated deployment target.
           schema:
-            $ref: '#/definitions/Environment'
+            $ref: '#/definitions/DeploymentTarget'
 
         default:
           description: Update failed.
@@ -2223,25 +2177,25 @@ paths:
 
     delete:
       tags:
-        - Environment
-      summary: Remove (unregister) the specified environment.
-      operationId: remove_environment
+        - Deployment
+      summary: Remove (unregister) the specified deployment target.
+      operationId: remove_deployment_target
       consumes:
         - application/json
       produces:
         - application/json
       parameters:
-        - name: environment_id
+        - name: target_id
           in: path
-          description: Environment id.
+          description: DeploymentTarget id.
           required: true
           type: integer
           format: int32
       responses:
         204:
-          description: Environment removed.
+          description: DeploymentTarget removed.
         default:
-          description: Failed to remove environment.
+          description: Failed to remove deployment target.
 
 
 
@@ -2271,32 +2225,32 @@ definitions:
   Build:
     type: object
     description: |
-      Models an individual build.
+      Models an individual build (execution) of a Pipeline.
     required:
-      - buildId
-      - projectId
-      - buildTriggerId
+      - build_id
+      - project_id
+      - pipeline_trigger_id
       - result
-      - resultMessage
+      - result_message
       - created
     properties:
-      buildId:
+      build_id:
         type: integer
         format: int32
-        description: The (internal) id of the build instance.
-      projectId:
+        description: The (HCE) id of the build instance.
+      project_id:
         type: integer
         format: int32
-        description: The (internal) id of the project the build is associated with.
-      buildTriggerId:
+        description: The (HCE) id of the project the build is associated with.
+      pipeline_trigger_id:
         type: integer
         format: int32
-        description: The (internal) id of the project the build is associated with.
+        description: The (HCE) id of the project the build is associated with.
       result:
         type: string
         description: Result of the build process.
         enum: ["PENDING", "SUCCESS", "FAILURE"]
-      resultMessage:
+      result_message:
         type: string
         description: Message associated with the build result.
       created:
@@ -2306,31 +2260,31 @@ definitions:
 
 
 
-  ############## BuildTrigger ##############
-  BuildTrigger:
+  ############## PipelineTrigger ##############
+  PipelineTrigger:
     type: object
     description: |
-      Models a Generic build trigger event.
-    discriminator: triggerType
+      Models a generic Pipeline build trigger event.
+    discriminator: trigger_type
     required:
-      - triggerId
-      - triggerType
+      - trigger_id
+      - trigger_type
       - author
       - message
       - created
     properties:
-      triggerId:
+      trigger_id:
         type: integer
         format: int32
-        description: The (internal) id of the instance.
-      triggerType:
+        description: The (HCE) id of the instance.
+      trigger_type:
         type: string
         description: The type of build trigger. (e.g. manual, or PR, etc.)
-        enum: ["PullRequestBuildTrigger", "ManaulBuildTrigger"]
+        enum: ["PullRequestPipelineTrigger", "ManaulPipelineTrigger"]
       author:
         type: string
         description: The author of a commmit selected.
-      avatarUrl:
+      avatar_url:
         type: string
         description: The compare url of a commmit selected.
       message:
@@ -2343,69 +2297,69 @@ definitions:
 
 
 
-  ############## PullRequestBuildTrigger ##############
-  PullRequestBuildTrigger:
+  ############## PullRequestPipelineTrigger ##############
+  PullRequestPipelineTrigger:
     description: |
-      Models a trigger of a build via a pull request webhook callback.
+      Models a trigger of a build pipeline via a pull request webhook callback.
     allOf:
-    - $ref: '#/definitions/BuildTrigger'
+    - $ref: '#/definitions/PipelineTrigger'
     - type: object
       required:
-        - pullRequestId
-        - webhookId
-        - commitSha
+        - pull_request_id
+        - webhook_id
+        - commit_sha
       properties:
-        pullRequestId:
+        pull_request_id:
           type: string
           description: The (VCS) id of the pull request.
-        webhookId:
+        webhook_id:
           type: string
           description: |
             The (VCS) id of the webhook that produced this pull request. REVISIT: do we need this?
-        commitSha:
+        commit_sha:
           type: string
-          description: The commitSha of a commmit selected.
-        commitUrl:
+          description: The commit_sha of a commmit selected.
+        commit_url:
           type: string
           description: The commit url of a commmit selected.
-        compareUrl:
+        compare_url:
           type: string
           description: The compare url of a commmit selected.
 
 
 
-  ############## ManualBuildTrigger ##############
-  ManualBuildTrigger:
+  ############## ManualPipelineTrigger ##############
+  ManualPipelineTrigger:
     description: |
-      Models a manual trigger of a build by a user for a specific project.
+      Models a manual trigger of a build pipeline by a user for a specific project.
     allOf:
-    - $ref: '#/definitions/BuildTrigger'
+    - $ref: '#/definitions/PipelineTrigger'
     - type: object
       required:
-        - userId
-        - projectId
-        - commitRef
+        - user_id
+        - project_id
+        - commit_ref
       properties:
-        userId:
+        user_id:
           type: integer
           format: int32
-          description: The (internal) id of the user who triggered the build.
-        projectId:
+          description: The (HCE) id of the user who triggered the build.
+        project_id:
           type: integer
           format: int32
-          description: The (internal) id of the project the build was triggered for.
-        commitRef:
+          description: The (HCE) id of the project the build was triggered for.
+        commit_ref:
           type: string
-          description: The commit reference to build from (e.g. a Git commitSha, or a SVN revision).
+          description: The commit reference to build from (e.g. a Git commit_sha, or a SVN revision).
 
 
-  ############## BuildEvent ##############
-  BuildEvent:
+  ############## PipelineEvent ##############
+  PipelineEvent:
     type: object
     description: |
-      Models a build event.
+      Models a pipeline event.
     required:
-      - build_event_id
+      - pipeline_event_id
       - build_id
       - event_name
       - result
@@ -2413,10 +2367,10 @@ definitions:
       - finished
       - data
     properties:
-      build_event_id:
+      pipeline_event_id:
         type: integer
         format: int32
-        description: Build event id.
+        description: Pipeline event id.
       build_id:
         type: integer
         format: int32
@@ -2426,18 +2380,18 @@ definitions:
         description: Event name.
       result:
         type: string
-        description: Result of the build process.
+        description: Result of the pipeline process.
         enum: ["PENDING", "SUCCESS", "FAILURE"]
       message:
         type: string
-        description: Message associated with the build event.
+        description: Message associated with the pipeline event.
       started:
         type: string
-        description: Build event start timestamp.
+        description: Pipeline event start timestamp.
         format: date-time
       finished:
         type: string
-        description: Build event start timestamp.
+        description: Pipeline event start timestamp.
         format: date-time
       data:
         type: string
@@ -2450,12 +2404,12 @@ definitions:
     type: object
     description: Models an artifact.
     required:
-      - artifactId
+      - artifact_id
       - message
-      - artifactType
+      - artifact_type
       - created
     properties:
-      artifactId:
+      artifact_id:
         type: integer
         format: int32
         description: The artifact id.
@@ -2466,7 +2420,7 @@ definitions:
         type: string
         description: Artifact creation timestamp.
         format: date-time
-      artifactType:
+      artifact_type:
         type: string
         description: The type of artifact, e.g. `BUILD_LOG`.
         enum: ["BUILD_LOG", "WORKSPACE", "TEST_LOG", "DEPLOY_LOG"]
@@ -2485,13 +2439,13 @@ definitions:
     type: object
     description: Artifact links.
     required:
-      - selfUrl
-      - editUrl
+      - self_url
+      - edit_url
     properties:
-      selfUrl:
+      self_url:
         type: string
         description: The artifact self link.
-      editUrl:
+      edit_url:
         type: string
         description: The artifact edit link.
 
@@ -2504,31 +2458,31 @@ definitions:
     description: Models a notification target (e.g. a HipChat room or Slack channel) for a specific project.
     required:
       - targetId
-      - projectId
-      - targetType
-      - apiUrl
-      - targetCredentialId
+      - project_id
+      - notification_target_type
+      - api_url
+      - credential_id
     properties:
       targetId:
         type: integer
         format: int32
-        description: The (internal) id of this instance.
-      projectId:
+        description: The (HCE) id of this instance.
+      project_id:
         type: integer
         format: int32
         description: The associated project id.
-      targetType:
+      notification_target_type:
         type: string
         description: |
           The notification target type, e.g. `SLACK`, `HIPCHAT`, etc.
         enum: ['SLACK', 'HIPCHAT', 'FLOWDOCK', 'HTTP_POST', 'GITHUB_PULL_REQUEST']
-      apiUrl:
+      api_url:
         type: string
         description: The target endpoint URL.
-      targetCredentialId:
+      credential_id:
         type: integer
         format: int32
-        description: The (internal) id of the credential used to access this target.
+        description: The (HCE) id of the credential used to access this target.
 
 
 
@@ -2539,27 +2493,27 @@ definitions:
     description: |
       Models an individual project.
     required:
-      - projectId
-      - projectName
-      - repoId
-      - repoCredentialId
+      - project_id
+      - project_name
+      - repo_id
+      - repo_credential_id
       - created
     properties:
-      projectId:
+      project_id:
         type: integer
         format: int32
-        description: The (internal) id of this instance.
-      projectName:
+        description: The (HCE) id of this instance.
+      project_name:
         type: string
         description: The user-provided label for the project.
-      repoId:
+      repo_id:
         type: integer
         format: int32
-        description: The (internal) id of the repo associated with the project
-      repoCredentialId:
+        description: The (HCE) id of the repo associated with the project
+      repo_credential_id:
         type: integer
         format: int32
-        description: The (internal) id of the credential object that the project uses to access the repo.
+        description: The (HCE) id of the credential object that the project uses to access the repo.
       created:
         type: string
         format: date-time
@@ -2573,19 +2527,19 @@ definitions:
     type: object
     description: Models a reference to a VCS repository instance, such as a GitHub repo, and references a specific branch.
     required:
-      - repoId
-      - vcsId
-      - repoName
+      - repo_id
+      - vcs_id
+      - repo_name
     properties:
-      repoId:
+      repo_id:
         type: integer
         format: int32
-        description: The (internal) id of this repo.
-      vcsId:
+        description: The (HCE) id of this repo.
+      vcs_id:
         type: integer
         format: int32
-        description: The (internal) id of the VCS instance that this repo belongs to.
-      repoName:
+        description: The (HCE) id of the VCS instance that this repo belongs to.
+      repo_name:
         type: string
         description: |
           The name of the repo, e.g. `hpcloud/codeengine`.
@@ -2602,33 +2556,33 @@ definitions:
     - $ref: '#/definitions/Repo'
     - type: object
       required:
-        - gitHubRepoId
-        - cloneUrl
-        - sshUrl
-        - httpUrl
-        - webHookId
-        - webHookUrl
-        - webHookCredentialId
+        - github_repo_id
+        - clone_url
+        - ssh_url
+        - http_url
+        - webhook_id
+        - webhook_url
+        - webhook_credential_id
       properties:
-        gitHubRepoId:
+        github_repo_id:
           type: string
-          description: For GitHub repos, the unique GitHub identifier.
-        cloneUrl:
+          description: For GitHub repos, the GitHub identifier.
+        clone_url:
           type: string
           description: The HTTPS URL used to clone the repo.
-        sshUrl:
+        ssh_url:
           type: string
           description: The SSH URL used to clone the repo.
-        httpUrl:
+        http_url:
           type: string
           description: The repo home page.
-        webHookId:
+        webhook_id:
           type: string
-          description: On GitHub, this is the unique id of the webhook for this repo that calls back to HelionCE.
-        webHookUrl:
+          description: On GitHub, this is the id of the webhook for this repo that calls back to HelionCE.
+        webhook_url:
           type: string
-          description: On GitHub, this is the unique id of the webhook for this repo that calls back to HelionCE.
-        webHookCredentialId:
+          description: On GitHub, this is the id of the webhook for this repo that calls back to HelionCE.
+        webhook_credential_id:
           type: integer
           format: int32
           description: The webhook token.
@@ -2637,51 +2591,51 @@ definitions:
           description: |
             The most recent commit SHA. REVISIT: should we be storing this?
 
-  ############## Environment ##############
-  Environment:
+  ############## DeploymentTarget ##############
+  DeploymentTarget:
     type: object
-    discriminator: environmentType
+    discriminator: deploymentTargetType
     description: Models a deployment target/environment (e.g. a CloudFoundry instance) that a project can be deployed to.
     required:
-      - environmentId
-      - environmentType
-      - apiUrl
-      - ownerUserId
-      - credentialId
+      - target_id
+      - deployment_target_type
+      - api_url
+      - owner_user_id
+      - credential_id
       - label
     properties:
-      environmentId:
+      target_id:
         type: integer
         format: int32
-        description: The internal id of this environment instance.
-      environmentType:
+        description: The (HCE) id of this deployemtn target instance.
+      deployment_target_type:
         type: string
-        description: The type of target environment.
-        enum: ['CloudFoundryEnvironment', 'AWSEnvironment']
-      apiUrl:
+        description: The type of deployment target.
+        enum: ['CloudFoundryDeploymentTarget', 'AWSDeploymentTarget']
+      api_url:
         type: string
         description: The URL endpoint that the target is accessible at.
-      ownerUserId:
+      owner_user_id:
         type: integer
         format: int32
-        description: The user id of the owner/creator of this environment.
-      credentialId:
+        description: The (HCE) user id of the owner/creator of this target.
+      credential_id:
         type: integer
         format: int32
-        description: The user id of the owner/creator of this environment.
+        description: Reference to the credentials for accessing this deployemtn target.
       label:
         type: string
         description: The user-friendly label for this instance, e.g. "Neil's first CloudFoundry environment"
       description:
         type: string
-        description: An optional description for the environment.
+        description: An optional description for the deployment target.
 
 
-  ############## CloudFoundryEnvironment ##############
-  CloudFoundryEnvironment:
+  ############## CloudFoundryDeploymentTarget ##############
+  CloudFoundryDeploymentTarget:
     description: Models a CloudFoundry deployment target/environment instance.
     allOf:
-    - $ref: '#/definitions/Environment'
+    - $ref: '#/definitions/DeploymentTarget'
     - type: object
       required:
         - organization
@@ -2694,16 +2648,16 @@ definitions:
           type: string
           description: The space within an organization that a project will be deployed under on this target.
 
-  ############## AWSEnvironment ##############
-  AWSEnvironment:
+  ############## AWSDeploymentTarget ##############
+  AWSDeploymentTarget:
     description: Models an AWS deployment target/environment instance.
     allOf:
-    - $ref: '#/definitions/Environment'
+    - $ref: '#/definitions/DeploymentTarget'
     - type: object
       required:
-        - awsEnvironmentName
+        - aws_environment_name
       properties:
-        awsEnvironmentName:
+        aws_environment_name:
           type: string
           description: The AWS environment name.
 
@@ -2713,31 +2667,31 @@ definitions:
     type: object
     description: Models a deployment.
     required:
-      - deploymentId
-      - projectId
-      - buildId
+      - deployment_id
+      - project_id
+      - build_id
       - created
     properties:
-      deploymentId:
+      deployment_id:
         type: integer
         format: int32
-        description: The internal deployment id.
-      projectId:
+        description: The (HCE) deployment id.
+      project_id:
         type: integer
         format: int32
         description: The project id to be deployed.
-      buildId:
+      build_id:
         type: integer
         format: int32
         description: The build id to be deployed.
-      environmentId:
+      target_id:
         type: integer
         format: int32
-        description: The (internal) id of the environment hosting the deployment.
-      applicationId:
+        description: The (HCE) id of the deployment target.
+      application_id:
         type: string
         description: The application identifier (on the target environment).
-      browseUrl:
+      browse_url:
         type: string
         description: The url where the build is deployed.
       created:
@@ -2752,23 +2706,23 @@ definitions:
     type: object
     description: Models a generic access credential.
     required:
-      - credentialId
-      - credentialType
-      - credentialValue
+      - credential_id
+      - credential_type
+      - credential_value
       - created
     properties:
-      credentialId:
+      credential_id:
         type: integer
         format: int32
-        description: The unique ID of this credential.
-      credentialType:
+        description: The (HCE) id of this credential.
+      credential_type:
         type: string
         description: The type of credential.
         enum: ['USERNAME_PASSWORD', 'OAUTH2_TOKEN', 'AWS_ACCESS_KEY', 'PKI']
-      credentialKey:
+      credential_key:
         type: string
         description: The credential key, e.g. the username, or AWS Access Key ID, etc. May be null.
-      credentialValue:
+      credential_value:
         type: string
         description: The credential value, e.g. the password, or AWS Secret Key.
       label:
@@ -2786,19 +2740,19 @@ definitions:
     type: object
     description: Models a User instance.
     required:
-      - userId
+      - user_id
       - email
-      - fullName
+      - full_name
       - created
     properties:
-      userId:
+      user_id:
         type: integer
         format: int32
-        description: The internal unique id of this User instance..
+        description: The (HCE) id of this User instance.
       email:
         type: string
         description: The user's email.
-      fullName:
+      full_name:
         type: string
         description: |
           The user's full name, e.g. "Alice McAlister"
@@ -2816,23 +2770,23 @@ definitions:
     description: |
       Models a reference to a Version Control System instance, e.g. GitHub.com, or a GitHub Enterprise instance, or a SVN instance.
     required:
-      - vcsId
-      - vcsType
-      - apiUrl
+      - vcs_id
+      - vcs_type
+      - api_url
       - label
     properties:
-      vcsId:
+      vcs_id:
         type: integer
         format: int32
-        description: The internal unique id of this VCS instance.
-      vcsType:
+        description: The (HCE) id of this VCS instance.
+      vcs_type:
         type: string
         description: The VCS type.
         enum: ['GITHUB', 'GITHUB_ENTERPRISE', 'BITBUCKET', 'SVN']
-      apiUrl:
+      api_url:
         type: string
         description: The URL for API operations on this VCS instance.
-      browseUrl:
+      browse_url:
         type: string
         description: The browser URL for this VCS instance.
       label:
@@ -2876,24 +2830,24 @@ definitions:
     description: |
       Models a reference to container registry, e.g. DockerHub.
     required:
-      - registryId
-      - containerType
-      - apiUrl
-      - credentialId
+      - registry_id
+      - container_type
+      - api_url
+      - credential_id
       - label
     properties:
-      registryId:
+      registry_id:
         type: integer
         format: int32
-        description: The internal unique id of this instance.
-      containerType:
+        description: The (HCE) id of this instance.
+      container_type:
         type: string
         description: The container technology type.
         enum: ['DOCKER', 'ROCKET', 'DRAWBRIDGE', 'LXD']
-      apiUrl:
+      api_url:
         type: string
         description: The URL for API operations on this instance.
-      credentialId:
+      credential_id:
         type: integer
         format: int32
         description: |
@@ -2907,32 +2861,32 @@ definitions:
     description: |
       Models a reference to a container image, e.g. a Docker image.
     required:
-      - imageId
-      - containerType
-      - registryId
+      - image_id
+      - container_type
+      - registry_id
       - repo
-      - repoTag
-      - imageLabel
+      - repo_tag
+      - image_label
     properties:
-      imageId:
+      image_id:
         type: integer
         format: int32
-        description: The (internal) unique id of this instance.
-      containerType:
+        description: The (HCE) id of this instance.
+      container_type:
         type: string
         description: The container technology type.
         enum: ['DOCKER', 'ROCKET', 'DRAWBRIDGE', 'LXD']
-      registryId:
+      registry_id:
         type: integer
         format: int32
-        description: The internal unique id of the registry instance where this container is hosted.
+        description: The (HCE) id of the registry instance where this container is hosted.
       repo:
         type: string
         description: The name of the image's repo in the container registry.
-      repoTag:
+      repo_tag:
         type: string
         description: The image's tag in the container registry.
-      imageLabel:
+      image_label:
         type: string
         description: The user-friendly label for this instance. Must be unique.
 
@@ -2942,119 +2896,61 @@ definitions:
       for building a project of a specific type (e.g. Java, PHP, etc).
     type: object
     required:
-      - buildContainerId
-      - imageId
-      - buildContainerLabel
+      - build_container_id
+      - image_id
+      - build_container_label
     properties:
-      buildContainerId:
+      build_container_id:
         type: integer
         format: int32
-        description: The (internal) id of this instance.
-      imageId:
+        description: The (HCE) id of this instance.
+      image_id:
         type: integer
         format: int32
-        description: The (internal) id of the backing ContainerImage.
-      buildContainerLabel:
+        description: The (HCE) id of the backing ContainerImage.
+      build_container_label:
         type: string
         description: The user-friendly label for this BuildContainer instance. Must be unique.
 
 
 
-  ############## PostDeployAction ##############
-  PostDeployAction:
+  ############## PipelineTask ##############
+  PipelineTask:
     type: object
-    description: Models a postDeployAction, (eg. stormrunner load test).
+    description: |
+      Models a task to perform in a specific project pipeline. For example, a
+      post-deployment task such as execution of StormRunner.
     required:
-      - actionId
-      - actionType
-      - actionName
-      - metadata
-      - created
+      - task_id
+      - task_name
+      - project_id
+      - pipeline_phase
+      - task_config
     properties:
-      actionId:
+      task_id:
         type: integer
         format: int32
-        description: The internal id of this post deployment action instance.
-      actionType:
+        description: The (HCE) id of this task instance.
+      task_name:
         type: string
-        description: The type of the post deployment action.
-        enum: ["STORMRUNNER"]
-      actionName:
-        type: string
-        description: The name of the post deployment action
-
-      metadata:
-        $ref: '#/definitions/StormRunnerMetadata'
-      created:
-        type: string
-        description: Date and time when the post deployment action is created.
-
-
-
-  ############## StormRunnerMetadata ##############
-  StormRunnerMetadata:
-    type: object
-    description: Models a postdeploymentaction, (eg. stormrunner load test).
-    required:
-      - tenantId
-      - actionType
-      - testId
-      - stormRunnerCredentialId
-    properties:
-      username:
-        type: string
-        description: The user name to login in inorder to create post deployment action.(eg. user name in stomrunner credentials)
-      password:
-        type: string
-        description: The password.(eg. password in stomrunner credentials)
-      tenantId:
-        type: string
-        description: The tenantid id in storm runner.
-      actionType:
-        type: string
-        description: The type of the post deployment action.
-        enum: ["STORMRUNNER"]
-      testId:
+        description: The name of the task, e.g. "StormRunner".
+      project_id:
         type: integer
         format: int32
-        description: The test id we want to run as post deployment action in storm runner.
-      stormRunnerCredentialId:
+        description: The (HCE) id of the project to execute this task on.
+      pipeline_phase:
+        type: string
+        description: |
+          When in the pipeline to execute the task. REVISIT: may need to add a "sequence" for defining task order within the phase.
+        enum: ["PRE_BUILD", "BUILD", "POST_BUILD", "PRE_TEST", "TEST", "POST_TEST", "PRE_DEPLOY", "DEPLOY", "POST_DEPLOY"]
+      task_config:
+        type: string
+        description: |
+          Configuration associated with this task (e.g. endpoint URLs, etc.). Note: This is usually in YAML format and variable subsitution may happen at runtime.
+      task_credential_id:
         type: integer
         format: int32
-        description: The credentials used to access StormRunner.
-
-
-  ############## StormRunnerRequest ##############
-  StormRunnerRequest:
-    type: object
-    description: Models a postdeploymentaction, (eg. stormrunner load test).
-    required:
-      - metadata
-      - actionType
-    properties:
-      metadata:
-        $ref: '#/definitions/StormRunnerMetadata'
-      actionType:
-        type: string
-        description: The type of the post deployment action.
-        enum: ["STORMRUNNER"]
-
-
-  ############## StormRunnerTest ##############
-  StormRunnerTest:
-    type: object
-    description: Models a stormrunner test.
-    required:
-      - testId
-      - testName
-    properties:
-      testId:
-        type: integer
-        format: int32
-        description: The id of StormRunner load test.
-      testName:
-        type: string
-        description: The name of strom runner load test.
+        description: Optional credentials associated with this task.
 
 
 
@@ -3064,10 +2960,10 @@ definitions:
     description: |
       A standard error object returned by all API calls.
     required:
-      - apiVersion
+      - api_version
       - status
     properties:
-      apiVersion:
+      api_version:
         type: string
         description: The API version, e.g. `v1`.
       status:
@@ -3079,5 +2975,6 @@ definitions:
       log:
         type: string
         description: Any additional error information, such as log entries, stack trace, etc. Likely to be turned off in production environments.
+
 
 
